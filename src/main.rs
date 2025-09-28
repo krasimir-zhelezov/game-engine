@@ -1,16 +1,33 @@
-use std::sync::Arc;
+use std::{sync::Arc, time::{Duration, Instant}};
 
 use winit::{application::ApplicationHandler, error::EventLoopError, event::WindowEvent, event_loop::{self, EventLoop}, window::{self, Window, WindowAttributes}};
 
+const FPS: u32 = 60;
+const FRAME_DURATION: std::time::Duration = Duration::from_nanos(1_000_000_000 / FPS as u64);
+
 struct App {
-    window: Option<Arc<Window>>
+    window: Option<Arc<Window>>,
+    running: bool,
+    last_update: Instant,
+    accumulator: Duration,
 }
 
 impl App {
     fn new() -> Self {
         Self {
             window: None,
+            running: true,
+            last_update: Instant::now(),
+            accumulator: Duration::ZERO,
         }
+    }
+
+    fn update(&mut self) {
+        println!("Updating game logic");
+    }
+
+    fn render(&self) {
+        println!("Rendering frame");
     }
 }
 
@@ -22,8 +39,6 @@ impl ApplicationHandler for App {
 
         let window = Arc::new(event_loop.create_window(attributes).unwrap());
 
-        // window.request_redraw();
-        // window.focus_window();
         self.window = Some(window);
     }  
 
@@ -34,13 +49,30 @@ impl ApplicationHandler for App {
         event: winit::event::WindowEvent,
     ) {
         if let WindowEvent::CloseRequested = event {
+            self.running = false;
             event_loop.exit();
             return;
         }
 
         match event {
             WindowEvent::RedrawRequested => {
-                println!("Redraw")
+                let now = Instant::now();
+                let delta = now - self.last_update;
+                self.last_update = now;
+                self.accumulator += delta;
+
+                while self.accumulator >= FRAME_DURATION {
+                    self.update();
+                    self.accumulator -= FRAME_DURATION;
+                }
+
+                self.render();
+
+                if let Some(window) = &self.window {
+                    if self.running {
+                        window.request_redraw();
+                    }
+                }
             }
             _ => {}
         }
