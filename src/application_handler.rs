@@ -50,6 +50,9 @@ impl ApplicationHandler for App {
                     }
                 }
             }
+            WindowEvent::KeyboardInput { device_id, event, is_synthetic } => {
+                println!("Key event: {:?}", event);
+            }
             _ => {}
         }
     }

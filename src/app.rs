@@ -20,10 +20,10 @@ impl App {
     }
 
     pub fn update(&mut self) {
-        println!("Updating game logic");
+        // println!("Updating game logic");
     }
 
     pub fn render(&self) {
-        println!("Rendering frame");
+        // println!("Rendering frame");
     }
 }
