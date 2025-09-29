@@ -2,7 +2,7 @@ use std::{sync::Arc, time::{Duration, Instant}};
 
 use winit::{application::ApplicationHandler, event::WindowEvent, window::{self, Window}};
 
-use crate::app::App;
+use crate::{app::App, graphics::init_graphics};
 
 const FPS: u32 = 60;
 const FRAME_DURATION: std::time::Duration = Duration::from_nanos(1_000_000_000 / FPS as u64);
@@ -15,8 +15,15 @@ impl ApplicationHandler for App {
 
         let window = Arc::new(event_loop.create_window(attributes).unwrap());
 
+        
+
+        self.graphics = pollster::block_on(init_graphics(window.clone()));
         self.window = Some(window);
-    }  
+
+        if let Some(window) = &self.window {
+            window.request_redraw();
+        }
+    } 
 
     fn window_event(
         &mut self,
