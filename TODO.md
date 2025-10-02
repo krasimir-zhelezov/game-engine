@@ -1,2 +1,2 @@
 * ### Transform Component
-* ### Fix Primitive Circle
+* ### ~~Fix Primitive Circle~~
