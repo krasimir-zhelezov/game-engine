@@ -3,7 +3,7 @@ use std::{sync::Arc, time::{Duration, Instant}};
 use wgpu::{wgc::device::queue, wgt::DeviceDescriptor, Features, Instance, Limits, MemoryHints, PowerPreference, RequestAdapterOptions};
 use winit::window::Window;
 
-use crate::graphics::Graphics;
+use crate::{components::{Color, PrimitiveType, Renderable}, graphics::Graphics};
 
 pub struct App {
     pub window: Option<Arc<Window>>,
@@ -30,7 +30,7 @@ impl App {
 
     pub fn render(&mut self) {
         if let Some(graphics) = self.graphics.as_mut() {
-            graphics.draw();
+            graphics.draw_renderables(&mut [&mut Renderable::new_rectangle(Color::GREEN, 1.0, 0.5), &mut Renderable::new_circle(Color::BLUE, 0.3)]);
         }
     }
 }

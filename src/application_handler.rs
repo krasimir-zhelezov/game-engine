@@ -1,6 +1,6 @@
 use std::{sync::Arc, time::{Duration, Instant}};
 
-use winit::{application::ApplicationHandler, event::WindowEvent, window::{self, Window}};
+use winit::{application::ApplicationHandler, event::WindowEvent, window::{self, Fullscreen, Window}};
 
 use crate::{app::App, graphics::init_graphics};
 
@@ -15,7 +15,9 @@ impl ApplicationHandler for App {
 
         let window = Arc::new(event_loop.create_window(attributes).unwrap());
 
-        
+        // let primary_monitor = window.available_monitors().next().unwrap();
+
+        // window.set_fullscreen(Some(Fullscreen::Borderless(Some(primary_monitor))));
 
         self.graphics = pollster::block_on(init_graphics(window.clone()));
         self.window = Some(window);
@@ -46,10 +48,11 @@ impl ApplicationHandler for App {
 
                 while self.accumulator >= FRAME_DURATION {
                     self.update();
+                    self.render();
                     self.accumulator -= FRAME_DURATION;
                 }
 
-                self.render();
+                
 
                 if let Some(window) = &self.window {
                     if self.running {

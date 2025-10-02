@@ -1,8 +1,27 @@
+use std::f32::consts::PI;
 use std::sync::Arc;
-use wgpu::{RenderPipeline, ShaderSource};
+use wgpu::util::DeviceExt;
+use wgpu::{Buffer, RenderPipeline, ShaderSource};
 use wgpu::{wgc::device::queue, wgt::DeviceDescriptor, Features, Instance, Limits, MemoryHints, PowerPreference, RequestAdapterOptions};
 use wgpu::{wgt::TextureViewDescriptor, Device, Queue, RequestAdapterOptionsBase, Surface, SurfaceConfiguration};
 use winit::{dpi::PhysicalSize, window::Window};
+
+use crate::components::{PrimitiveType, RenderType, Renderable};
+
+const VERTEX_ATTRIBUTES: &[wgpu::VertexAttribute] = &[
+    // Position (x, y)
+    wgpu::VertexAttribute {
+        offset: 0,
+        shader_location: 0,
+        format: wgpu::VertexFormat::Float32x2,
+    },
+    // Color (r, g, b, a)
+    wgpu::VertexAttribute {
+        offset: std::mem::size_of::<[f32; 2]>() as wgpu::BufferAddress,
+        shader_location: 1,
+        format: wgpu::VertexFormat::Float32x4,
+    },
+];
 
 pub async fn init_graphics(window: Arc<Window>) -> Option<Graphics> {
     let instance = Instance::default();
@@ -64,13 +83,32 @@ fn create_render_pipeline(device: &Device, config: &SurfaceConfiguration) -> wgp
         push_constant_ranges: &[],
     });
 
+    let vertex_atrributes = [
+        wgpu::VertexAttribute {
+            format: wgpu::VertexFormat::Float32x2,
+            offset: 0,
+            shader_location: 0,
+        },
+        wgpu::VertexAttribute {
+            format: wgpu::VertexFormat::Float32x4,
+            offset: std::mem::size_of::<[f32; 2]>() as wgpu::BufferAddress,
+            shader_location: 1,
+        },
+    ];
+
+    let vertex_buffer_layout = wgpu::VertexBufferLayout {
+        array_stride: std::mem::size_of::<[f32; 6]>() as wgpu::BufferAddress,
+        step_mode: wgpu::VertexStepMode::Vertex,
+        attributes: &vertex_atrributes,
+    };
+
     device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
         label: None,
         layout: Some(&render_pipeline_layout),
         vertex: wgpu::VertexState {
             module: &shader_module,
             entry_point: Some("vs_main"),
-            buffers: &[],
+            buffers: &[vertex_buffer_layout],
             compilation_options: Default::default(),
         },
         fragment: Some(wgpu::FragmentState {
@@ -78,7 +116,7 @@ fn create_render_pipeline(device: &Device, config: &SurfaceConfiguration) -> wgp
             entry_point: Some("fs_main"),
             targets: &[Some(wgpu::ColorTargetState {
                 format: config.format,
-                blend: Some(wgpu::BlendState::REPLACE),
+                blend: Some(wgpu::BlendState::ALPHA_BLENDING),
                 write_mask: wgpu::ColorWrites::ALL,
             })],
             compilation_options: Default::default(),
@@ -103,6 +141,50 @@ fn create_render_pipeline(device: &Device, config: &SurfaceConfiguration) -> wgp
     })
 }
 
+fn create_rectangle_verticles() -> (Vec<f32>, Vec<u16>) {
+    let verticles = vec![
+        -0.5, -0.5,     1.0, 0.0, 0.0, 1.0,
+        0.5, -0.5,      1.0, 0.0, 0.0, 1.0,
+        0.5, 0.5,       1.0, 0.0, 0.0, 1.0,
+        -0.5, 0.5,      1.0, 0.0, 0.0, 1.0,
+    ];
+
+    let indices = vec![0, 1, 2, 0, 2, 3];
+
+    (verticles, indices)
+}
+
+fn create_circle_verticles(segments: u16) -> (Vec<f32>, Vec<u16>) {
+    let mut verticles = Vec::new();
+    let mut indices = Vec::new();
+
+    verticles.extend_from_slice(&[0.0, 0.0, 1.0, 1.0, 1.0, 1.0]);
+
+    for i in 0..=segments {
+        let angle = 2.0 * PI * (i as f32) / (segments as f32);
+        let x = 0.3 * angle.cos();
+        let y = 0.3 * angle.sin();
+        verticles.extend_from_slice(&[x, y, 0.0, 0.0, 1.0, 1.0]);
+
+        if i < segments {
+            indices.extend_from_slice(&[0, i + 1, (i + 1) % segments + 1]);
+        }
+    }
+
+    (verticles, indices)
+}
+
+fn create_line_verticles() -> (Vec<f32>, Vec<u16>) {
+    let verticles = vec![
+        -0.5, 0.0,     1.0, 0.0, 0.0, 1.0,
+        0.5, 0.0,      1.0, 0.0, 0.0, 1.0,
+    ];
+
+    let indices = vec![0, 1];
+
+    (verticles, indices)
+}
+
 pub struct Graphics {
     pub window: Arc<Window>,
     pub instance: Instance,
@@ -114,6 +196,92 @@ pub struct Graphics {
 }
 
 impl Graphics {
+    pub fn create_vertex_buffer(&self, verticles: &[f32]) -> Buffer {
+        self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: None,
+            contents: bytemuck::cast_slice(verticles),
+            usage: wgpu::BufferUsages::VERTEX,
+        })
+    }
+
+    pub fn create_index_buffer(&self, indices: &[u16]) -> Buffer {
+        self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: None,
+            contents: bytemuck::cast_slice(indices),
+            usage: wgpu::BufferUsages::INDEX,
+        })
+    }
+
+    pub fn setup_primitive_buffers(&self, renderable: &mut Renderable) {
+        match &renderable.render_type {
+            RenderType::Primitive { primitive_type, .. } => {
+                let (verticles, indices) = match primitive_type {
+                    PrimitiveType::Rectangle => create_rectangle_verticles(),
+                    PrimitiveType::Circle => create_circle_verticles(16),
+                    PrimitiveType::Line => create_line_verticles(),
+                };
+
+                renderable.vertex_buffer = Some(self.create_vertex_buffer(&verticles));
+                renderable.index_buffer = Some(self.create_index_buffer(&indices));
+                renderable.vertex_count = indices.len() as u32;
+            },
+            RenderType::Texture { .. } => {
+                todo!("Implement texture rendering");
+            }
+        }   
+    }
+
+    pub fn draw_renderables(&mut self, renderables: &mut[&mut Renderable]) {
+        // println!("Rendering {} objects", renderables.len());
+
+        let frame = self.surface.get_current_texture().expect("Failed to get current texture");
+
+        let view = frame.texture.create_view(&TextureViewDescriptor::default());
+
+        let mut encoder = self
+            .device
+            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                label: None,
+            });
+
+        {
+            let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor { 
+                label: None, 
+                color_attachments: &[Some(wgpu::RenderPassColorAttachment { 
+                    view: &view, 
+                    depth_slice: None, 
+                    resolve_target: None, 
+                    ops: wgpu::Operations { 
+                        load: wgpu::LoadOp::Clear(wgpu::Color::BLACK), 
+                        store: wgpu::StoreOp::Store 
+                    }
+                })], 
+                depth_stencil_attachment: None, 
+                timestamp_writes: None, 
+                occlusion_query_set: None 
+            });
+
+            render_pass.set_pipeline(&self.render_pipeline);
+
+            for mut renderable in renderables {
+                self.setup_primitive_buffers(&mut renderable);
+
+                if !renderable.visible {
+                    continue;
+                }
+
+                if let (Some(vertex_buffer), Some(index_buffer)) = (&renderable.vertex_buffer, &renderable.index_buffer) {
+                    render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
+                    render_pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint16);
+                    render_pass.draw_indexed(0..renderable.vertex_count, 0, 0..1);
+                }
+            }
+        }
+
+        self.queue.submit(Some(encoder.finish()));
+        frame.present();
+    }
+
     pub fn resize(&mut self, new_size: PhysicalSize<u32>) {
         self.surface_configuration.width = new_size.width.max(1);
         self.surface_configuration.height = new_size.height.max(1);

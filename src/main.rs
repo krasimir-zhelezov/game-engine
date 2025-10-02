@@ -1,6 +1,7 @@
 mod app;
 mod application_handler;
 mod graphics;
+mod components;
 
 use winit::{error::EventLoopError, event_loop::EventLoop};
 
