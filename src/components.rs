@@ -93,16 +93,3 @@ impl Renderable {
         Self::new_primitive(PrimitiveType::Line, color, [start[0], start[1], end[0], end[1]])
     }
 }
-
-#[repr(C)]
-#[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
-struct Vertex {
-    position: [f32; 2],
-    color: [f32; 4],
-}
-
-impl Vertex {
-    fn new(position: [f32; 2], color: [f32; 4]) -> Self {
-        Self { position, color }
-    }
-}

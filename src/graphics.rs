@@ -2,26 +2,11 @@ use std::f32::consts::PI;
 use std::sync::Arc;
 use wgpu::util::DeviceExt;
 use wgpu::{Buffer, RenderPipeline, ShaderSource};
-use wgpu::{wgc::device::queue, wgt::DeviceDescriptor, Features, Instance, Limits, MemoryHints, PowerPreference, RequestAdapterOptions};
-use wgpu::{wgt::TextureViewDescriptor, Device, Queue, RequestAdapterOptionsBase, Surface, SurfaceConfiguration};
+use wgpu::{wgt::DeviceDescriptor, Features, Instance, Limits, MemoryHints, PowerPreference, RequestAdapterOptions};
+use wgpu::{wgt::TextureViewDescriptor, Device, Queue, Surface, SurfaceConfiguration};
 use winit::{dpi::PhysicalSize, window::Window};
 
 use crate::components::{PrimitiveType, RenderType, Renderable};
-
-const VERTEX_ATTRIBUTES: &[wgpu::VertexAttribute] = &[
-    // Position (x, y)
-    wgpu::VertexAttribute {
-        offset: 0,
-        shader_location: 0,
-        format: wgpu::VertexFormat::Float32x2,
-    },
-    // Color (r, g, b, a)
-    wgpu::VertexAttribute {
-        offset: std::mem::size_of::<[f32; 2]>() as wgpu::BufferAddress,
-        shader_location: 1,
-        format: wgpu::VertexFormat::Float32x4,
-    },
-];
 
 pub async fn init_graphics(window: Arc<Window>) -> Option<Graphics> {
     let instance = Instance::default();
@@ -286,41 +271,5 @@ impl Graphics {
         self.surface_configuration.width = new_size.width.max(1);
         self.surface_configuration.height = new_size.height.max(1);
         self.surface.configure(&self.device, &self.surface_configuration);
-    }
-
-    pub fn draw(&mut self) {
-        let frame = self.surface
-            .get_current_texture()
-            .expect("Failed to get current texture");
-
-        let view = frame.texture.create_view(&TextureViewDescriptor::default());
-
-        let mut encoder = self
-            .device
-            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
-                label: None,
-            });
-
-        {
-            let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                label: None,
-                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                    view: &view,
-                    resolve_target: None,
-                    ops: wgpu::Operations { load: wgpu::LoadOp::Clear(wgpu::Color::BLUE), store: wgpu::StoreOp::Store
-                    },
-                    depth_slice: None,
-                })],
-                depth_stencil_attachment: None,
-                timestamp_writes: None,
-                occlusion_query_set: None,
-            });
-
-            render_pass.set_pipeline(&self.render_pipeline);
-            render_pass.draw(0..3, 0..1);
-        }
-
-        self.queue.submit(Some(encoder.finish()));
-        frame.present();
     }
 }

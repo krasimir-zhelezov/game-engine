@@ -1,9 +1,8 @@
 use std::{sync::Arc, time::{Duration, Instant}};
 
-use wgpu::{wgc::device::queue, wgt::DeviceDescriptor, Features, Instance, Limits, MemoryHints, PowerPreference, RequestAdapterOptions};
 use winit::window::Window;
 
-use crate::{components::{Color, PrimitiveType, Renderable}, graphics::Graphics};
+use crate::{components::{Color, Renderable}, graphics::Graphics};
 
 pub struct App {
     pub window: Option<Arc<Window>>,
