@@ -66,6 +66,11 @@ impl ApplicationHandler for App {
             WindowEvent::MouseInput { device_id, state, button } => {
                 println!("Mouse button event: {:?}", button);
             }
+            WindowEvent::Resized(new_size) => {
+                if let Some(graphics) = self.graphics.as_mut() {
+                    graphics.resize(new_size);
+                }
+            }
             _ => {}
         }
     }
