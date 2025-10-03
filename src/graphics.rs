@@ -6,7 +6,7 @@ use wgpu::{wgt::DeviceDescriptor, Features, Instance, Limits, MemoryHints, Power
 use wgpu::{wgt::TextureViewDescriptor, Device, Queue, Surface, SurfaceConfiguration};
 use winit::{dpi::PhysicalSize, window::Window};
 
-use crate::components::{PrimitiveType, RenderType, Renderable};
+use crate::components::{Color, PrimitiveType, RenderType, Renderable};
 
 pub async fn init_graphics(window: Arc<Window>) -> Option<Graphics> {
     let instance = Instance::default();
@@ -126,15 +126,15 @@ fn create_render_pipeline(device: &Device, config: &SurfaceConfiguration) -> wgp
     })
 }
 
-fn create_rectangle_verticles(width: f32, height: f32) -> (Vec<f32>, Vec<u16>) {
+fn create_rectangle_verticles(width: f32, height: f32, color: &Color) -> (Vec<f32>, Vec<u16>) {
     // let half_width = width / 2.0;
     // let half_height = height / 2.0;
 
     let verticles = vec![
-        -width, -height,     1.0, 0.0, 0.0, 1.0,
-        width, -height,      1.0, 0.0, 0.0, 1.0,
-        width, height,       1.0, 0.0, 0.0, 1.0,
-        -width, height,      1.0, 0.0, 0.0, 1.0,
+        -width, -height,     color.r, color.g, color.b, color.a,
+        width, -height,      color.r, color.g, color.b, color.a,
+        width, height,       color.r, color.g, color.b, color.a,
+        -width, height,      color.r, color.g, color.b, color.a,
     ];
 
     let indices = vec![0, 1, 2, 0, 2, 3];
@@ -204,7 +204,7 @@ impl Graphics {
         match &renderable.render_type {
             RenderType::Primitive { primitive_type, .. } => {
                 let (verticles, indices) = match primitive_type {
-                    PrimitiveType::Rectangle => create_rectangle_verticles(renderable.transform.scale[0], renderable.transform.scale[1]),
+                    PrimitiveType::Rectangle => create_rectangle_verticles(renderable.transform.scale[0], renderable.transform.scale[1], &renderable.color),
                     PrimitiveType::Circle => create_circle_verticles(16, renderable.transform.scale),
                     PrimitiveType::Line => create_line_verticles(),
                 };

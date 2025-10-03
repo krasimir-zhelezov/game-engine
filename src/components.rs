@@ -50,7 +50,6 @@ impl Default for Transform {
 pub enum RenderType {
     Primitive {
         primitive_type: PrimitiveType,
-        color: Color,
         parameters: [f32; 4],
     },
     Texture
@@ -62,6 +61,7 @@ pub struct Renderable {
     pub vertex_buffer: Option<Buffer>,
     pub index_buffer: Option<Buffer>,
     pub vertex_count: u32,
+    pub color: Color,
     pub visible: bool,
 }
 
@@ -70,7 +70,6 @@ impl Renderable {
         Self {
             render_type: RenderType::Primitive {
                 primitive_type,
-                color,
                 parameters,
             },
             transform: Transform {
@@ -82,6 +81,7 @@ impl Renderable {
             index_buffer: None,
             vertex_count: 0,
             visible: true,
+            color,
         }
     }
 
