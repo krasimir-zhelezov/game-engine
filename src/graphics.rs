@@ -126,15 +126,13 @@ fn create_render_pipeline(device: &Device, config: &SurfaceConfiguration) -> wgp
     })
 }
 
-fn create_rectangle_verticles(width: f32, height: f32, color: &Color) -> (Vec<f32>, Vec<u16>) {
-    // let half_width = width / 2.0;
-    // let half_height = height / 2.0;
+fn create_rectangle_verticles(scale: [f32; 2], color: &Color, position:  [f32; 2]) -> (Vec<f32>, Vec<u16>) {
 
     let verticles = vec![
-        -width, -height,     color.r, color.g, color.b, color.a,
-        width, -height,      color.r, color.g, color.b, color.a,
-        width, height,       color.r, color.g, color.b, color.a,
-        -width, height,      color.r, color.g, color.b, color.a,
+        position[0] - scale[0], position[1] - scale[1],     color.r, color.g, color.b, color.a,
+        position[0] + scale[0], position[1] - scale[1],      color.r, color.g, color.b, color.a,
+        position[0] + scale[0], position[1] + scale[1],       color.r, color.g, color.b, color.a,
+        position[0] - scale[0], position[1] + scale[1],      color.r, color.g, color.b, color.a,
     ];
 
     let indices = vec![0, 1, 2, 0, 2, 3];
@@ -204,7 +202,7 @@ impl Graphics {
         match &renderable.render_type {
             RenderType::Primitive { primitive_type, .. } => {
                 let (verticles, indices) = match primitive_type {
-                    PrimitiveType::Rectangle => create_rectangle_verticles(renderable.transform.scale[0], renderable.transform.scale[1], &renderable.color),
+                    PrimitiveType::Rectangle => create_rectangle_verticles(renderable.transform.scale, &renderable.color, renderable.transform.position),
                     PrimitiveType::Circle => create_circle_verticles(16, renderable.transform.scale),
                     PrimitiveType::Line => create_line_verticles(),
                 };
