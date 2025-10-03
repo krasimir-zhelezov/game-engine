@@ -6,7 +6,7 @@ use wgpu::{wgt::DeviceDescriptor, Features, Instance, Limits, MemoryHints, Power
 use wgpu::{wgt::TextureViewDescriptor, Device, Queue, Surface, SurfaceConfiguration};
 use winit::{dpi::PhysicalSize, window::Window};
 
-use crate::components::{Color, PrimitiveType, RenderType, Renderable};
+use crate::components::{Color, PrimitiveType, RenderType, Renderable, Vec2};
 
 pub async fn init_graphics(window: Arc<Window>) -> Option<Graphics> {
     let instance = Instance::default();
@@ -126,13 +126,13 @@ fn create_render_pipeline(device: &Device, config: &SurfaceConfiguration) -> wgp
     })
 }
 
-fn create_rectangle_verticles(scale: [f32; 2], color: &Color, position:  [f32; 2]) -> (Vec<f32>, Vec<u16>) {
+fn create_rectangle_verticles(scale: Vec2, color: Color, position: Vec2) -> (Vec<f32>, Vec<u16>) {
 
     let verticles = vec![
-        position[0] - scale[0], position[1] - scale[1],     color.r, color.g, color.b, color.a,
-        position[0] + scale[0], position[1] - scale[1],      color.r, color.g, color.b, color.a,
-        position[0] + scale[0], position[1] + scale[1],       color.r, color.g, color.b, color.a,
-        position[0] - scale[0], position[1] + scale[1],      color.r, color.g, color.b, color.a,
+        position.x - scale.x, position.y - scale.y,     color.r, color.g, color.b, color.a,
+        position.x + scale.x, position.y - scale.y,      color.r, color.g, color.b, color.a,
+        position.x + scale.x, position.y + scale.y,       color.r, color.g, color.b, color.a,
+        position.x - scale.x, position.y + scale.y,      color.r, color.g, color.b, color.a,
     ];
 
     let indices = vec![0, 1, 2, 0, 2, 3];
@@ -140,7 +140,7 @@ fn create_rectangle_verticles(scale: [f32; 2], color: &Color, position:  [f32; 2
     (verticles, indices)
 }
 
-fn create_circle_verticles(segments: u16, scale: [f32; 2]) -> (Vec<f32>, Vec<u16>) {
+fn create_circle_verticles(segments: u16, scale: Vec2) -> (Vec<f32>, Vec<u16>) {
     let mut verticles = Vec::new();
     let mut indices = Vec::new();
 
@@ -148,8 +148,8 @@ fn create_circle_verticles(segments: u16, scale: [f32; 2]) -> (Vec<f32>, Vec<u16
 
     for i in 0..=segments {
         let angle = 2.0 * PI * (i as f32) / (segments as f32);
-        let x = angle.cos() * scale[0];
-        let y = angle.sin() * scale[1];
+        let x = angle.cos() * scale.x;
+        let y = angle.sin() * scale.y;
         verticles.extend_from_slice(&[x, y, 0.0, 0.0, 1.0, 1.0]);
 
         if i < segments {
@@ -202,7 +202,7 @@ impl Graphics {
         match &renderable.render_type {
             RenderType::Primitive { primitive_type, .. } => {
                 let (verticles, indices) = match primitive_type {
-                    PrimitiveType::Rectangle => create_rectangle_verticles(renderable.transform.scale, &renderable.color, renderable.transform.position),
+                    PrimitiveType::Rectangle => create_rectangle_verticles(renderable.transform.scale, renderable.color, renderable.transform.position),
                     PrimitiveType::Circle => create_circle_verticles(16, renderable.transform.scale),
                     PrimitiveType::Line => create_line_verticles(),
                 };

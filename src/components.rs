@@ -16,6 +16,7 @@ impl PrimitiveType {
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct Color {
     pub r: f32,
     pub g: f32,
@@ -31,18 +32,24 @@ impl Color {
     pub const BLACK: Color = Color { r: 0.0, g: 0.0, b: 0.0, a: 1.0 };
 }
 
+#[derive(Clone, Copy)]
+pub struct Vec2 {
+    pub x: f32,
+    pub y: f32,
+}
+
 pub struct Transform {
-    pub position: [f32; 2],
-    pub scale: [f32; 2],
-    pub rotation: f32,
+    pub position: Vec2,
+    pub scale: Vec2,
+    pub rotation: Vec2,
 }
 
 impl Default for Transform {
     fn default() -> Self {
         Self {
-            position: [0.0, 0.0],
-            scale: [1.0, 1.0],
-            rotation: 0.0,
+            position: Vec2 { x: 0.0, y: 0.0 },
+            scale: Vec2 { x: 1.0, y: 1.0 },
+            rotation: Vec2 { x: 0.0, y: 0.0 },
         }
     }
 }
@@ -72,11 +79,7 @@ impl Renderable {
                 primitive_type,
                 parameters,
             },
-            transform: Transform {
-                position: [0.0, 0.0],
-                scale: [parameters[0], parameters[1]],
-                rotation: 0.0,
-            },
+            transform: Transform::default(),
             vertex_buffer: None,
             index_buffer: None,
             vertex_count: 0,
