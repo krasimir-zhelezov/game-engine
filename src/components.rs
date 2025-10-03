@@ -73,7 +73,11 @@ impl Renderable {
                 color,
                 parameters,
             },
-            transform: Transform::default(),
+            transform: Transform {
+                position: [0.0, 0.0],
+                scale: [parameters[0], parameters[1]],
+                rotation: 0.0,
+            },
             vertex_buffer: None,
             index_buffer: None,
             vertex_count: 0,

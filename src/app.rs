@@ -28,8 +28,15 @@ impl App {
     }
 
     pub fn render(&mut self) {
+        let mut rectangle = Renderable::new_rectangle(Color::GREEN, 1.0, 3.5);
+        rectangle.transform.position = [1.0, 0.5];
+        rectangle.transform.scale = [3.0, 1.0];
+
+        let mut circle = Renderable::new_circle(Color::BLUE, 0.3);
+        circle.transform.scale = [0.5, 1.0];
+
         if let Some(graphics) = self.graphics.as_mut() {
-            graphics.draw_renderables(&mut [&mut Renderable::new_rectangle(Color::GREEN, 1.0, 0.5), &mut Renderable::new_circle(Color::BLUE, 0.3)]);
+            graphics.draw_renderables(&mut [&mut circle, &mut rectangle]);
         }
     }
 }

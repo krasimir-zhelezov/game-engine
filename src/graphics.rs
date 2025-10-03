@@ -126,12 +126,15 @@ fn create_render_pipeline(device: &Device, config: &SurfaceConfiguration) -> wgp
     })
 }
 
-fn create_rectangle_verticles() -> (Vec<f32>, Vec<u16>) {
+fn create_rectangle_verticles(width: f32, height: f32) -> (Vec<f32>, Vec<u16>) {
+    let half_width = width / 2.0;
+    let half_height = height / 2.0;
+
     let verticles = vec![
-        -0.5, -0.5,     1.0, 0.0, 0.0, 1.0,
-        0.5, -0.5,      1.0, 0.0, 0.0, 1.0,
-        0.5, 0.5,       1.0, 0.0, 0.0, 1.0,
-        -0.5, 0.5,      1.0, 0.0, 0.0, 1.0,
+        -half_width, -half_height,     1.0, 0.0, 0.0, 1.0,
+        half_width, -half_height,      1.0, 0.0, 0.0, 1.0,
+        half_width, half_height,       1.0, 0.0, 0.0, 1.0,
+        -half_width, half_height,      1.0, 0.0, 0.0, 1.0,
     ];
 
     let indices = vec![0, 1, 2, 0, 2, 3];
@@ -147,8 +150,8 @@ fn create_circle_verticles(segments: u16) -> (Vec<f32>, Vec<u16>) {
 
     for i in 0..=segments {
         let angle = 2.0 * PI * (i as f32) / (segments as f32);
-        let x = 0.3 * angle.cos();
-        let y = 0.3 * angle.sin();
+        let x = angle.cos();
+        let y = angle.sin();
         verticles.extend_from_slice(&[x, y, 0.0, 0.0, 1.0, 1.0]);
 
         if i < segments {
@@ -201,7 +204,7 @@ impl Graphics {
         match &renderable.render_type {
             RenderType::Primitive { primitive_type, .. } => {
                 let (verticles, indices) = match primitive_type {
-                    PrimitiveType::Rectangle => create_rectangle_verticles(),
+                    PrimitiveType::Rectangle => create_rectangle_verticles(renderable.transform.scale[0], renderable.transform.scale[1]),
                     PrimitiveType::Circle => create_circle_verticles(16),
                     PrimitiveType::Line => create_line_verticles(),
                 };
