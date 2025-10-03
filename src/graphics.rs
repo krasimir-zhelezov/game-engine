@@ -140,16 +140,16 @@ fn create_rectangle_verticles(scale: Vec2, color: Color, position: Vec2) -> (Vec
     (verticles, indices)
 }
 
-fn create_circle_verticles(segments: u16, scale: Vec2, color: Color) -> (Vec<f32>, Vec<u16>) {
+fn create_circle_verticles(segments: u16, scale: Vec2, color: Color, position: Vec2) -> (Vec<f32>, Vec<u16>) {
     let mut verticles = Vec::new();
     let mut indices = Vec::new();
 
-    verticles.extend_from_slice(&[0.0, 0.0, 1.0, 1.0, 1.0, 1.0]);
+    verticles.extend_from_slice(&[position.x, position.y, color.r, color.g, color.b, color.a]);
 
     for i in 0..=segments {
         let angle = 2.0 * PI * (i as f32) / (segments as f32);
-        let x = angle.cos() * scale.x;
-        let y = angle.sin() * scale.y;
+        let x = position.x + (angle.cos() * scale.x);
+        let y = position.y + (angle.sin() * scale.y);
         verticles.extend_from_slice(&[x, y, color.r, color.g, color.b, color.a]);
 
         if i < segments {
@@ -203,7 +203,7 @@ impl Graphics {
             RenderType::Primitive { primitive_type, .. } => {
                 let (verticles, indices) = match primitive_type {
                     PrimitiveType::Rectangle => create_rectangle_verticles(renderable.transform.scale, renderable.color, renderable.transform.position),
-                    PrimitiveType::Circle => create_circle_verticles(16, renderable.transform.scale, renderable.color),
+                    PrimitiveType::Circle => create_circle_verticles(16, renderable.transform.scale, renderable.color, renderable.transform.position),
                     PrimitiveType::Line => create_line_verticles(),
                 };
 

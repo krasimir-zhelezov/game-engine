@@ -32,8 +32,9 @@ impl App {
         rectangle.transform.position = Vec2 { x: -0.5, y: 0.0 };
         rectangle.transform.scale = Vec2 { x: 0.5, y: 1.5 };
 
-        let mut circle = Renderable::new_circle(Color::WHITE, 0.3);
+        let mut circle = Renderable::new_circle(Color::BLUE, 0.3);
         circle.transform.scale = Vec2 { x: 0.3, y: 0.3 };
+        circle.transform.position = Vec2 { x: 0.5, y: 0.0 };
 
         if let Some(graphics) = self.graphics.as_mut() {
             graphics.draw_renderables(&mut [&mut circle]);
