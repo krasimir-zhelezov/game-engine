@@ -34,7 +34,7 @@ impl ApplicationHandler for App {
         event: winit::event::WindowEvent,
     ) {
         if let WindowEvent::CloseRequested = event {
-            self.running = false;
+            self.world.running = false;
             event_loop.exit();
             return;
         }
@@ -42,20 +42,18 @@ impl ApplicationHandler for App {
         match event {
             WindowEvent::RedrawRequested => {
                 let now = Instant::now();
-                let delta = now - self.last_update;
-                self.last_update = now;
-                self.accumulator += delta;
+                let delta = now - self.world.last_update;
+                self.world.last_update = now;
+                self.world.accumulator += delta;
 
-                while self.accumulator >= FRAME_DURATION {
-                    self.update();
-                    self.render();
-                    self.accumulator -= FRAME_DURATION;
+                while self.world.accumulator >= FRAME_DURATION {
+                    self.world.update();
+                    self.world.render();
+                    self.world.accumulator -= FRAME_DURATION;
                 }
 
-                
-
                 if let Some(window) = &self.window {
-                    if self.running {
+                    if self.world.running {
                         window.request_redraw();
                     }
                 }

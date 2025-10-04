@@ -2,23 +2,19 @@ use std::{sync::Arc, time::{Duration, Instant}};
 
 use winit::window::Window;
 
-use crate::{components::{Color, Renderable, Vec2}, graphics::Graphics};
+use crate::{components::{Color, Renderable, Vec2}, graphics::Graphics, world::World};
 
 pub struct App {
+    pub world: World,
     pub window: Option<Arc<Window>>,
-    pub running: bool,
-    pub last_update: Instant,
-    pub accumulator: Duration,
     pub graphics: Option<Graphics>
 }
 
 impl App {
     pub fn new() -> Self {
         Self {
+            world: World::new(),
             window: None,
-            running: true,
-            last_update: Instant::now(),
-            accumulator: Duration::ZERO,
             graphics: None
         }
     }
@@ -41,5 +37,3 @@ impl App {
         }
     }
 }
-
-    
