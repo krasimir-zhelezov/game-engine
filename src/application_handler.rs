@@ -59,7 +59,7 @@ impl ApplicationHandler for App {
                 }
             }
             WindowEvent::KeyboardInput { device_id, event, is_synthetic } => {
-                println!("Key event: {:?}", event);
+                self.world.handle_keyboard_input(&event);
             }
             WindowEvent::MouseInput { device_id, state, button } => {
                 println!("Mouse button event: {:?}", button);
