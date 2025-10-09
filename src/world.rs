@@ -2,7 +2,7 @@ use std::time::{Duration, Instant};
 
 use winit::{event::{self, ElementState, KeyEvent}, keyboard::{self, Key, KeyCode, PhysicalKey}};
 
-use crate::{resource_store::ResourceStore, systems::{input_system::{self, InputState, InputSystem}, system::System, system_manager::SystemManager}};
+use crate::{resources::resource_store::ResourceStore, systems::{input_system::{self, InputState, InputSystem}, system::System, system_manager::SystemManager}};
 
 pub struct World {
     pub running: bool,
@@ -35,11 +35,9 @@ impl World {
     }
 
     pub fn update(&mut self) {
-        let mut view = WorldView {
+        self.systems.update(&mut WorldView {
             resources: &mut self.resources,
-        };
-
-        self.systems.update(&mut view);
+        });
 
         let input = self.resources.get::<InputState>().unwrap();
 
@@ -64,7 +62,7 @@ impl World {
         input_system.handle_keyboard_input(&mut view, event);
     }
 
-    pub fn handdle_mouse_input(&self) {
+    pub fn handle_mouse_input(&self) {
         todo!();
     }
 }

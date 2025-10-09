@@ -4,7 +4,7 @@ mod graphics;
 mod components;
 mod world;
 mod systems;
-mod resource_store;
+mod resources;
 
 use winit::{error::EventLoopError, event_loop::EventLoop};
 
