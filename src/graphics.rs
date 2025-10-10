@@ -6,7 +6,7 @@ use wgpu::{wgt::DeviceDescriptor, Features, Instance, Limits, MemoryHints, Power
 use wgpu::{wgt::TextureViewDescriptor, Device, Queue, Surface, SurfaceConfiguration};
 use winit::{dpi::PhysicalSize, window::Window};
 
-use crate::components::{Color, PrimitiveType, RenderType, Renderable, Vec2};
+use crate::graphic_components::{Color, PrimitiveType, RenderType, Renderable, Vec2};
 
 pub async fn init_graphics(window: Arc<Window>) -> Option<Graphics> {
     let instance = Instance::default();

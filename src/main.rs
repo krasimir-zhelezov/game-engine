@@ -1,10 +1,12 @@
 mod app;
 mod application_handler;
 mod graphics;
-mod components;
+mod graphic_components;
 mod world;
 mod systems;
 mod resources;
+mod entities;
+mod components;
 
 use winit::{error::EventLoopError, event_loop::EventLoop};
 

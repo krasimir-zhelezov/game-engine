@@ -2,7 +2,7 @@ use std::{sync::Arc, time::{Duration, Instant}};
 
 use winit::window::Window;
 
-use crate::{components::{Color, Renderable, Vec2}, graphics::Graphics, world::World};
+use crate::{graphic_components::{Color, Renderable, Vec2}, graphics::Graphics, world::World};
 
 pub struct App {
     pub world: World,
