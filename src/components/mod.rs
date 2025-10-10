@@ -1,2 +1,2 @@
-pub mod component_manager;
+pub mod component_store;
 pub mod transform;
