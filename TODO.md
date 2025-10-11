@@ -1,9 +1,10 @@
 * ### ~~Transform Component~~
 * ### ~~Fix Primitive Circle~~
 * ### Triangle Primitive
-* ### Game Object / Entity
+* ### ~~Game Object / Entity~~
 * ### Texture Rendering
-* ### Component Handling
+* ### ~~Component Handling~~
 * ### Memory leak (doesn't clean old buffers)
 * ### Recreates buffers every frame
+* ### Camera
 
