@@ -4,3 +4,6 @@
 * ### Game Object / Entity
 * ### Texture Rendering
 * ### Component Handling
+* ### Memory leak (doesn't clean old buffers)
+* ### Recreates buffers every frame
+

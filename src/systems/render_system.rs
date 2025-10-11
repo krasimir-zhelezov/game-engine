@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::f32::consts::PI;
 use std::sync::Arc;
 use wgpu::util::DeviceExt;
@@ -6,56 +7,14 @@ use wgpu::{wgt::DeviceDescriptor, Features, Instance, Limits, MemoryHints, Power
 use wgpu::{wgt::TextureViewDescriptor, Device, Queue, Surface, SurfaceConfiguration};
 use winit::{dpi::PhysicalSize, window::Window};
 
-use crate::graphic_components::{Color, PrimitiveType, RenderType, Renderable, Vec2};
-
-pub async fn init_graphics(window: Arc<Window>) -> Option<Graphics> {
-    let instance = Instance::default();
-
-    let surface = instance.create_surface(window.clone()).unwrap();
-
-    let adapter = instance.request_adapter(&RequestAdapterOptions {
-        power_preference: PowerPreference::default(),
-        force_fallback_adapter: false,
-        compatible_surface: Some(&surface)
-    })
-    .await
-    .expect("Could not get an open GPU adapter");
-
-     let (device, queue) = adapter.request_device(
-        &DeviceDescriptor {
-            label: None,
-            required_features: Features::empty(),
-            required_limits: Limits::default(),
-            memory_hints: MemoryHints::Performance,
-            trace: Default::default(),
-        }
-    )
-    .await
-    .expect("Failed to get device");
-
-    let size = window.inner_size();
-    let width = size.width.max(1);
-    let height = size.height.max(1);
-    let surface_configuration = surface.get_default_config(&adapter, width, height).unwrap();
-    surface.configure(&device, &surface_configuration);
-
-    let render_pipeline = create_render_pipeline(&device, &surface_configuration);
-        
-    let gfx= Graphics {
-        window,
-        instance,
-        surface,
-        device,
-        surface_configuration,
-        queue,
-        render_pipeline
-    };
-
-    Some(gfx)
-}
+use crate::components::renderable::{self, Color, PrimitiveType, RenderType, Renderable};
+use crate::components::transform::{Position, Scale, Transform};
+use crate::entities::entity::Entity;
+use crate::systems::system::System;
+use crate::world::WorldView;
 
 fn create_render_pipeline(device: &Device, config: &SurfaceConfiguration) -> wgpu::RenderPipeline {
-    let shader_source = ShaderSource::Wgsl(include_str!("shader.wgsl").into());
+    let shader_source = ShaderSource::Wgsl(include_str!("../shader.wgsl").into());
 
     let shader_module = device.create_shader_module(wgpu::ShaderModuleDescriptor {
         label: None,
@@ -126,8 +85,7 @@ fn create_render_pipeline(device: &Device, config: &SurfaceConfiguration) -> wgp
     })
 }
 
-fn create_rectangle_verticles(scale: Vec2, color: Color, position: Vec2) -> (Vec<f32>, Vec<u16>) {
-
+fn create_rectangle_verticles(scale: Scale, color: Color, position: Position) -> (Vec<f32>, Vec<u16>) {
     let verticles = vec![
         position.x - scale.x, position.y - scale.y,     color.r, color.g, color.b, color.a,
         position.x + scale.x, position.y - scale.y,      color.r, color.g, color.b, color.a,
@@ -140,7 +98,7 @@ fn create_rectangle_verticles(scale: Vec2, color: Color, position: Vec2) -> (Vec
     (verticles, indices)
 }
 
-fn create_circle_verticles(segments: u16, scale: Vec2, color: Color, position: Vec2) -> (Vec<f32>, Vec<u16>) {
+fn create_circle_verticles(segments: u16, scale: Scale, color: Color, position: Position) -> (Vec<f32>, Vec<u16>) {
     let mut verticles = Vec::new();
     let mut indices = Vec::new();
 
@@ -171,17 +129,71 @@ fn create_line_verticles() -> (Vec<f32>, Vec<u16>) {
     (verticles, indices)
 }
 
-pub struct Graphics {
+struct RenderBuffer {
+    pub vertex_buffer: Option<Buffer>,
+    pub index_buffer: Option<Buffer>,
+    pub vertex_count: u32,
+}
+
+pub struct RenderSystem {
     pub window: Arc<Window>,
     pub instance: Instance,
     pub surface: Surface<'static>,
     pub surface_configuration: SurfaceConfiguration,
     pub device: Device,
     pub queue: Queue,
-    pub render_pipeline: RenderPipeline
+    pub render_pipeline: RenderPipeline,
+    current_render_buffer: Option<RenderBuffer>,
+    buffer_cache: HashMap<u32, RenderBuffer>,
 }
 
-impl Graphics {
+impl RenderSystem {
+    pub async fn new(window: Arc<Window>) -> Self {
+        let instance = Instance::default();
+
+        let surface = instance.create_surface(window.clone()).unwrap();
+
+        let adapter = instance.request_adapter(&RequestAdapterOptions {
+            power_preference: PowerPreference::default(),
+            force_fallback_adapter: false,
+            compatible_surface: Some(&surface)
+        })
+        .await
+        .expect("Could not get an open GPU adapter");
+
+        let (device, queue) = adapter.request_device(
+            &DeviceDescriptor {
+                label: None,
+                required_features: Features::empty(),
+                required_limits: Limits::default(),
+                memory_hints: MemoryHints::Performance,
+                trace: Default::default(),
+            }
+        )
+        .await
+        .expect("Failed to get device");
+
+        let size = window.inner_size();
+        let width = size.width.max(1);
+        let height = size.height.max(1);
+        let surface_configuration = surface.get_default_config(&adapter, width, height).unwrap();
+        surface.configure(&device, &surface_configuration);
+
+        let render_pipeline = create_render_pipeline(&device, &surface_configuration);
+            
+        RenderSystem {
+            window,
+            instance,
+            surface,
+            device,
+            surface_configuration,
+            queue,
+            render_pipeline,
+            current_render_buffer: None,
+            buffer_cache: HashMap::new(),
+        }
+    }
+
     pub fn create_vertex_buffer(&self, verticles: &[f32]) -> Buffer {
         self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: None,
@@ -198,18 +210,20 @@ impl Graphics {
         })
     }
 
-    pub fn setup_primitive_buffers(&self, renderable: &mut Renderable) {
+    pub fn setup_primitive_buffers(&mut self, entity_id: u32, renderable: &Renderable, transform: &Transform) {
         match &renderable.render_type {
             RenderType::Primitive { primitive_type, .. } => {
                 let (verticles, indices) = match primitive_type {
-                    PrimitiveType::Rectangle => create_rectangle_verticles(renderable.transform.scale, renderable.color, renderable.transform.position),
-                    PrimitiveType::Circle => create_circle_verticles(16, renderable.transform.scale, renderable.color, renderable.transform.position),
+                    PrimitiveType::Rectangle => create_rectangle_verticles(transform.scale, renderable.color, transform.position),
+                    PrimitiveType::Circle => create_circle_verticles(16, transform.scale, renderable.color, transform.position),
                     PrimitiveType::Line => create_line_verticles(),
                 };
 
-                renderable.vertex_buffer = Some(self.create_vertex_buffer(&verticles));
-                renderable.index_buffer = Some(self.create_index_buffer(&indices));
-                renderable.vertex_count = indices.len() as u32;
+                self.buffer_cache.insert(entity_id, RenderBuffer {
+                    vertex_buffer: Some(self.create_vertex_buffer(&verticles)),
+                    index_buffer: Some(self.create_index_buffer(&indices)),
+                    vertex_count: indices.len() as u32,
+                });
             },
             RenderType::Texture { .. } => {
                 todo!("Implement texture rendering");
@@ -217,7 +231,7 @@ impl Graphics {
         }   
     }
 
-    pub fn draw_renderables(&mut self, renderables: &mut[&mut Renderable]) {
+    pub fn draw(&mut self, data: Vec<(Entity, &Renderable, &Transform)>) {
         // println!("Rendering {} objects", renderables.len());
 
         let frame = self.surface.get_current_texture().expect("Failed to get current texture");
@@ -249,17 +263,19 @@ impl Graphics {
 
             render_pass.set_pipeline(&self.render_pipeline);
 
-            for mut renderable in renderables {
-                self.setup_primitive_buffers(&mut renderable);
+            for (entity, renderable, transform) in data {
+                self.setup_primitive_buffers(entity.id, renderable, &transform);
 
                 if !renderable.visible {
                     continue;
                 }
 
-                if let (Some(vertex_buffer), Some(index_buffer)) = (&renderable.vertex_buffer, &renderable.index_buffer) {
+                let current_render_buffer = self.buffer_cache.get(&entity.id).unwrap();
+
+                if let (Some(vertex_buffer), Some(index_buffer)) = (&current_render_buffer.vertex_buffer, &current_render_buffer.index_buffer) {
                     render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
                     render_pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint16);
-                    render_pass.draw_indexed(0..renderable.vertex_count, 0, 0..1);
+                    render_pass.draw_indexed(0..current_render_buffer.vertex_count, 0, 0..1);
                 }
             }
         }
@@ -272,5 +288,13 @@ impl Graphics {
         self.surface_configuration.width = new_size.width.max(1);
         self.surface_configuration.height = new_size.height.max(1);
         self.surface.configure(&self.device, &self.surface_configuration);
+    }
+}
+
+impl System for RenderSystem {
+    fn update(&mut self, world: &mut WorldView) {
+        let data = world.components.get_entities_with_component::<Renderable, Transform>();
+
+        self.draw(data);
     }
 }

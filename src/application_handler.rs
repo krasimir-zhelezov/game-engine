@@ -2,7 +2,7 @@ use std::{sync::Arc, time::{Duration, Instant}};
 
 use winit::{application::ApplicationHandler, event::WindowEvent, window::{self, Fullscreen, Window}};
 
-use crate::{app::App, graphics::init_graphics};
+use crate::{app::App, world::World};
 
 const FPS: u32 = 60;
 const FRAME_DURATION: std::time::Duration = Duration::from_nanos(1_000_000_000 / FPS as u64);
@@ -19,7 +19,7 @@ impl ApplicationHandler for App {
 
         // window.set_fullscreen(Some(Fullscreen::Borderless(Some(primary_monitor))));
 
-        self.graphics = pollster::block_on(init_graphics(window.clone()));
+        self.world = Some(World::new(window.clone()));
         self.window = Some(window);
 
         if let Some(window) = &self.window {
@@ -34,40 +34,43 @@ impl ApplicationHandler for App {
         event: winit::event::WindowEvent,
     ) {
         if let WindowEvent::CloseRequested = event {
-            self.world.running = false;
+            if let Some(world) = &mut self.world {
+                world.running = false;
+            }
             event_loop.exit();
             return;
         }
 
         match event {
             WindowEvent::RedrawRequested => {
-                let now = Instant::now();
-                let delta = now - self.world.last_update;
-                self.world.last_update = now;
-                self.world.accumulator += delta;
+                if let Some(world) = &mut self.world {
+                    let now = Instant::now();
+                    let delta = now - world.last_update;
+                    world.last_update = now;
+                    world.accumulator += delta;
 
-                while self.world.accumulator >= FRAME_DURATION {
-                    self.world.update();
-                    self.world.render();
-                    self.world.accumulator -= FRAME_DURATION;
-                }
+                    while world.accumulator >= FRAME_DURATION {
+                        world.update();
+                        world.accumulator -= FRAME_DURATION;
+                    }
 
-                if let Some(window) = &self.window {
-                    if self.world.running {
-                        window.request_redraw();
+                    if let Some(window) = &self.window {
+                        if world.running {
+                            window.request_redraw();
+                        }
                     }
                 }
             }
             WindowEvent::KeyboardInput { device_id, event, is_synthetic } => {
-                self.world.handle_keyboard_input(&event);
+                if let Some(world) = &mut self.world {
+                    world.handle_keyboard_input(&event);
+                }
             }
             WindowEvent::MouseInput { device_id, state, button } => {
                 println!("Mouse button event: {:?}", button);
             }
             WindowEvent::Resized(new_size) => {
-                if let Some(graphics) = self.graphics.as_mut() {
-                    graphics.resize(new_size);
-                }
+               
             }
             _ => {}
         }

@@ -2,20 +2,18 @@ use std::{sync::Arc, time::{Duration, Instant}};
 
 use winit::window::Window;
 
-use crate::{graphic_components::{Color, Renderable, Vec2}, graphics::Graphics, world::World};
+use crate::{graphic_components::{Color, Renderable, Vec2}, world::World};
 
 pub struct App {
-    pub world: World,
+    pub world: Option<World>,
     pub window: Option<Arc<Window>>,
-    pub graphics: Option<Graphics>
 }
 
 impl App {
     pub fn new() -> Self {
         Self {
-            world: World::new(),
+            world: None,
             window: None,
-            graphics: None
         }
     }
 
@@ -24,16 +22,16 @@ impl App {
     }
 
     pub fn render(&mut self) {
-        let mut rectangle = Renderable::new_rectangle(Color { r: 190.0, g: 0.0, b: 201.0, a: 1.0 }, 1.0, 3.5);
-        rectangle.transform.position = Vec2 { x: -0.5, y: 0.0 };
-        rectangle.transform.scale = Vec2 { x: 0.5, y: 1.5 };
+        // let mut rectangle = Renderable::new_rectangle(Color { r: 190.0, g: 0.0, b: 201.0, a: 1.0 }, 1.0, 3.5);
+        // rectangle.transform.position = Vec2 { x: -0.5, y: 0.0 };
+        // rectangle.transform.scale = Vec2 { x: 0.5, y: 1.5 };
 
-        let mut circle = Renderable::new_circle(Color::BLUE, 0.3);
-        circle.transform.scale = Vec2 { x: 0.3, y: 0.3 };
-        circle.transform.position = Vec2 { x: 0.5, y: 0.0 };
+        // let mut circle = Renderable::new_circle(Color::BLUE, 0.3);
+        // circle.transform.scale = Vec2 { x: 0.3, y: 0.3 };
+        // circle.transform.position = Vec2 { x: 0.5, y: 0.0 };
 
-        if let Some(graphics) = self.graphics.as_mut() {
-            graphics.draw_renderables(&mut [&mut circle]);
-        }
+        // if let Some(graphics) = self.graphics.as_mut() {
+        //     graphics.draw_renderables(&mut [&mut circle]);
+        // }
     }
 }

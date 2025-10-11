@@ -1,9 +1,9 @@
-use std::{any::{Any, TypeId}, collections::HashMap, time::{Duration, Instant}};
+use std::{any::{Any, TypeId}, collections::HashMap, sync::Arc, time::{Duration, Instant}};
 
 use wgpu::naga::Type;
-use winit::{event::{self, ElementState, KeyEvent}, keyboard::{self, Key, KeyCode, PhysicalKey}};
+use winit::{event::{self, ElementState, KeyEvent}, keyboard::{self, Key, KeyCode, PhysicalKey}, window::Window};
 
-use crate::{components::{component_store::ComponentStore, tag::Tag, transform::{Position, Scale, Transform}}, entities::{entity::Entity, entity_manager::EntityManager}, resources::resource_store::ResourceStore, systems::{input_system::{self, InputState, InputSystem}, system::System, system_manager::SystemManager}};
+use crate::{components::{component_store::ComponentStore, renderable::{Color, PrimitiveType, RenderType, Renderable}, tag::Tag, transform::{Position, Scale, Transform}}, entities::{entity::Entity, entity_manager::EntityManager}, resources::resource_store::ResourceStore, systems::{input_system::{self, InputState, InputSystem}, render_system::RenderSystem, system::System, system_manager::SystemManager}};
 
 pub struct World {
     pub running: bool,
@@ -18,10 +18,12 @@ pub struct World {
 
 pub struct WorldView<'a> {
     pub resources: &'a mut ResourceStore,
+    pub components: &'a mut ComponentStore,
+    pub entities: &'a mut EntityManager,
 }
 
 impl World {
-    pub fn new() -> Self {
+    pub fn new(window: Arc<Window>) -> Self {
         let mut world = Self {
             running: true,
             last_update: Instant::now(),
@@ -35,13 +37,22 @@ impl World {
 
         world.resources.insert(InputState::new());
         world.systems.add_system(Box::new(InputSystem::new()));
+        world.systems.add_system(Box::new(pollster::block_on(RenderSystem::new(window))));
 
         let player = world.entities.create_entity();
         world.components.add_component(player, Transform {
             position: Position { x: 0.0, y: 0.0 },
-            scale: Scale { x: 1.0, y: 1.0 },
+            scale: Scale { x: 0.5, y: 0.5 },
         });
         world.components.add_component(player, Tag::new("Player"));
+        world.components.add_component(player, Renderable {
+            color: Color { r: 255.0, g: 0.0, b: 0.0, a: 1.0 },
+            render_type: RenderType::Primitive {
+                primitive_type: PrimitiveType::Rectangle,
+                parameters: [0.0, 0.0, 0.0, 0.0],
+            },
+            visible: true,
+        });
 
         let enemy = world.entities.create_entity();
         world.components.add_component(enemy, Transform {
@@ -55,6 +66,8 @@ impl World {
     pub fn update(&mut self) {
         self.systems.update(&mut WorldView {
             resources: &mut self.resources,
+            components: &mut self.components,
+            entities: &mut self.entities,
         });
 
         let input = self.resources.get::<InputState>().unwrap();
@@ -69,7 +82,7 @@ impl World {
     }
 
     pub fn render(&self) {
-        // TODO: render logic
+        // graphics.draw(&mut []);
     }
 
     pub fn handle_keyboard_input(&mut self, event: &KeyEvent) {
@@ -79,6 +92,8 @@ impl World {
 
         let mut view = WorldView {
             resources,
+            components: &mut self.components,
+            entities: &mut self.entities,
         };
 
         input_system.handle_keyboard_input(&mut view, event);

@@ -46,4 +46,30 @@ impl ComponentStore {
             .get_mut(&entity)?
             .downcast_mut::<T>()
     }
+
+    pub fn get_entities_with_component<T: 'static, U: 'static>(&self) -> Vec<(Entity, &T, &U)> {
+        let type_id_1 = TypeId::of::<T>();
+        let type_id_2 = TypeId::of::<U>();
+
+        self.entity_components
+            .iter()
+            .filter_map(|(entity, comp_types)| {
+                if comp_types.contains(&type_id_1) && comp_types.contains(&type_id_2) {
+                    Some(*entity)
+                } else {
+                    None
+                }
+            })
+            .filter_map(|entity| {
+                if let (Some(comp1), Some(comp2)) = (
+                    self.get_component::<T>(&entity),
+                    self.get_component::<U>(&entity)
+                ) {
+                    Some((entity, comp1, comp2))
+                } else {
+                    None
+                }
+            })
+            .collect()
+    }
 }
