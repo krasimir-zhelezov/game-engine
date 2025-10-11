@@ -3,7 +3,7 @@ use std::{any::{Any, TypeId}, collections::HashMap, time::{Duration, Instant}};
 use wgpu::naga::Type;
 use winit::{event::{self, ElementState, KeyEvent}, keyboard::{self, Key, KeyCode, PhysicalKey}};
 
-use crate::{components::transform::{Position, Scale, Transform}, entities::entity::Entity, resources::resource_store::ResourceStore, systems::{input_system::{self, InputState, InputSystem}, system::System, system_manager::SystemManager}};
+use crate::{components::{component_store::ComponentStore, transform::{Position, Scale, Transform}}, entities::entity::Entity, resources::resource_store::ResourceStore, systems::{input_system::{self, InputState, InputSystem}, system::System, system_manager::SystemManager}};
 
 pub struct World {
     pub running: bool,
@@ -12,9 +12,7 @@ pub struct World {
     pub resources: ResourceStore,
     pub systems: SystemManager,
     pub next_id: u32,
-    pub components: HashMap<TypeId, HashMap<u32, Box<dyn Any>>>, // Component Type to (Entity ID to Component)
-    pub entity_components: HashMap<u32, Vec<TypeId>>, // Entity ID to Component Vectors
-    // pub entities: Vec<Entity>, // TODO: Future implementation for entities
+    pub components: ComponentStore, // Component Type to (Entity ID to Component)
     pub player: Option<Entity>,
 }
 
@@ -31,9 +29,7 @@ impl World {
             resources: ResourceStore::new(),
             systems: SystemManager::new(),
             next_id: 0,
-            components: HashMap::new(),
-            entity_components: HashMap::new(),
-            // entities: Vec::new(),
+            components: ComponentStore::new(),
             player: None,
         };
 
@@ -42,8 +38,8 @@ impl World {
 
         world.player = Some(world.create_entity());
 
-        if let Some(player) = &world.player {
-            world.add_component(player.id.clone(), Transform {
+        if let Some(player) = world.player {
+            world.components.add_component(player, Transform {
                 position: Position { x: 0.0, y: 0.0 },
                 scale: Scale { x: 1.0, y: 1.0 },
             });
@@ -59,14 +55,17 @@ impl World {
 
         let input = self.resources.get::<InputState>().unwrap();
         if input.is_key_pressed(KeyCode::KeyW) {
-            self.player.as_ref().map(|player| {
-                if let Some(transform) = self.components.get_mut(&TypeId::of::<Transform>()).and_then(|comp_map| comp_map.get_mut(&player.id)).and_then(|comp| comp.downcast_mut::<Transform>()) {
+            if let Some(player) = self.player {
+                self.components.get_component_mut::<Transform>(&player).map(|transform| {
                     transform.position.y += 1.0;
-                }
-            });
+                });
+            }
         }
 
-        println!("{:#?}", self.components.get(&TypeId::of::<Transform>()).unwrap().get(&1).unwrap().downcast_ref::<Transform>());
+        if let Some(player) = self.player {
+            let transform = self.components.get_component::<Transform>(&player).unwrap();
+            println!("Player Position: ({}, {})", transform.position.x, transform.position.y);
+        }
     }
 
     pub fn render(&self) {
@@ -95,19 +94,5 @@ impl World {
         Entity {
             id: self.next_id,
         }
-    }
-
-    pub fn add_component<T: 'static>(&mut self, entity_id: u32, component: T) {
-        let type_id = TypeId::of::<T>();
-
-        self.components
-            .entry(type_id)
-            .or_insert_with(HashMap::new)
-            .insert(entity_id, Box::new(component));
-
-        self.entity_components
-            .entry(entity_id)
-            .or_insert_with(Vec::new)
-            .push(type_id);
     }
 }
