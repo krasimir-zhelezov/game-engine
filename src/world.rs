@@ -13,7 +13,7 @@ pub struct World {
     pub systems: SystemManager,
     pub next_id: u32,
     pub components: ComponentStore, // Component Type to (Entity ID to Component)
-    pub player: Option<Entity>,
+    pub entities: Vec<Entity>,
 }
 
 pub struct WorldView<'a> {
@@ -30,20 +30,17 @@ impl World {
             systems: SystemManager::new(),
             next_id: 0,
             components: ComponentStore::new(),
-            player: None,
+            entities: Vec::new(),
         };
 
         world.resources.insert(InputState::new());
         world.systems.add_system(Box::new(InputSystem::new()));
 
-        world.player = Some(world.create_entity());
-
-        if let Some(player) = world.player {
-            world.components.add_component(player, Transform {
-                position: Position { x: 0.0, y: 0.0 },
-                scale: Scale { x: 1.0, y: 1.0 },
-            });
-        }
+        let player = world.create_entity();
+        world.components.add_component(player, Transform {
+            position: Position { x: 0.0, y: 0.0 },
+            scale: Scale { x: 1.0, y: 1.0 },
+        });
 
         world
     }
@@ -55,16 +52,12 @@ impl World {
 
         let input = self.resources.get::<InputState>().unwrap();
         if input.is_key_pressed(KeyCode::KeyW) {
-            if let Some(player) = self.player {
-                self.components.get_component_mut::<Transform>(&player).map(|transform| {
+            for entity in &self.entities {
+                if let Some(transform) = self.components.get_component_mut::<Transform>(entity) {
                     transform.position.y += 1.0;
-                });
-            }
-        }
-
-        if let Some(player) = self.player {
-            let transform = self.components.get_component::<Transform>(&player).unwrap();
-            println!("Player Position: ({}, {})", transform.position.x, transform.position.y);
+                    println!("Entity {} moved to position: ({}, {})", entity.id, transform.position.x, transform.position.y);
+                }
+            }            
         }
     }
 
@@ -91,8 +84,12 @@ impl World {
     pub fn create_entity(&mut self) -> Entity {
         self.next_id += 1;
 
-        Entity {
+        let entity = Entity {
             id: self.next_id,
-        }
+        };
+
+        self.entities.push(entity);
+
+        entity
     }
 }
