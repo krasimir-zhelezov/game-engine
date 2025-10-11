@@ -3,7 +3,7 @@ use std::{any::{Any, TypeId}, collections::HashMap, time::{Duration, Instant}};
 use wgpu::naga::Type;
 use winit::{event::{self, ElementState, KeyEvent}, keyboard::{self, Key, KeyCode, PhysicalKey}};
 
-use crate::{components::{component_store::ComponentStore, transform::{Position, Scale, Transform}}, entities::entity::Entity, resources::resource_store::ResourceStore, systems::{input_system::{self, InputState, InputSystem}, system::System, system_manager::SystemManager}};
+use crate::{components::{component_store::ComponentStore, tag::Tag, transform::{Position, Scale, Transform}}, entities::entity::Entity, resources::resource_store::ResourceStore, systems::{input_system::{self, InputState, InputSystem}, system::System, system_manager::SystemManager}};
 
 pub struct World {
     pub running: bool,
@@ -41,6 +41,13 @@ impl World {
             position: Position { x: 0.0, y: 0.0 },
             scale: Scale { x: 1.0, y: 1.0 },
         });
+        world.components.add_component(player, Tag::new("Player"));
+
+        let enemy = world.create_entity();
+        world.components.add_component(enemy, Transform {
+            position: Position { x: 5.0, y: 5.0 },
+            scale: Scale { x: 1.0, y: 1.0 },
+        });
 
         world
     }
@@ -53,6 +60,14 @@ impl World {
         let input = self.resources.get::<InputState>().unwrap();
         if input.is_key_pressed(KeyCode::KeyW) {
             for entity in &self.entities {
+                if let Some(tag) = self.components.get_component::<Tag>(entity) {
+                    if tag.name != "Player" {
+                        continue;
+                    }
+                } else {
+                    continue;
+                }
+                
                 if let Some(transform) = self.components.get_component_mut::<Transform>(entity) {
                     transform.position.y += 1.0;
                     println!("Entity {} moved to position: ({}, {})", entity.id, transform.position.x, transform.position.y);
