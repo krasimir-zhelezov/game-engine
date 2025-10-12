@@ -1,6 +1,5 @@
 mod app;
 mod application_handler;
-mod graphic_components;
 mod world;
 mod systems;
 mod resources;

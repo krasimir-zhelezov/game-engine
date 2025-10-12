@@ -3,7 +3,7 @@ use std::{any::{Any, TypeId}, collections::HashMap, sync::Arc, time::{Duration, 
 use wgpu::naga::Type;
 use winit::{event::{self, ElementState, KeyEvent}, keyboard::{self, Key, KeyCode, PhysicalKey}, window::Window};
 
-use crate::{components::{component_store::ComponentStore, renderable::{Color, PrimitiveType, RenderType, Renderable}, tag::Tag, transform::{Position, Scale, Transform}}, entities::{entity::Entity, entity_manager::EntityManager}, resources::resource_store::ResourceStore, systems::{input_system::{self, InputState, InputSystem}, render_system::RenderSystem, system::System, system_manager::SystemManager}};
+use crate::{components::{camera::Camera, component_store::ComponentStore, renderable::{Color, PrimitiveType, RenderType, Renderable}, tag::Tag, transform::{Position, Scale, Transform}}, entities::{entity::Entity, entity_manager::EntityManager}, resources::resource_store::ResourceStore, systems::{camera_system::{CameraState, CameraSystem}, input_system::{self, InputState, InputSystem}, render_system::RenderSystem, system::System, system_manager::SystemManager}};
 
 pub struct World {
     pub running: bool,
@@ -36,13 +36,17 @@ impl World {
         };
 
         world.resources.insert(InputState::new());
+        world.resources.insert(CameraState::new());
+        world.systems.add_system(Box::new(CameraSystem::new()));
         world.systems.add_system(Box::new(InputSystem::new()));
         world.systems.add_system(Box::new(pollster::block_on(RenderSystem::new(window))));
+        
 
         let player = world.entities.create_entity();
         world.components.add_component(player, Transform {
             position: Position { x: 0.0, y: 0.0 },
-            scale: Scale { x: 0.5, y: 0.5 },
+            scale: Scale { x: 1.0, y: 1.0 },
+            rotation: 1.0,
         });
         world.components.add_component(player, Tag::new("Player"));
         world.components.add_component(player, Renderable {
@@ -58,6 +62,21 @@ impl World {
         world.components.add_component(enemy, Transform {
             position: Position { x: 5.0, y: 5.0 },
             scale: Scale { x: 1.0, y: 1.0 },
+            rotation: 0.0,
+        });
+
+        let camera = world.entities.create_entity();
+        world.components.add_component(camera, Transform {
+            position: Position { x: 0.0, y: 0.0 },
+            scale: Scale { x: 1.0, y: 1.0 },
+            rotation: 0.0,
+        });
+        world.components.add_component(camera, Camera {
+            zoom: 10.0, // Increase zoom to see more
+            aspect_ratio: 16.0 / 9.0, // Set proper aspect ratio
+            near_plane: -100.0,
+            far_plane: 100.0,
+            fov: 1.0, // Not used in orthographic
         });
 
         world

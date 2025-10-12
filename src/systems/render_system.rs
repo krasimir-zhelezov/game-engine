@@ -2,18 +2,20 @@ use std::collections::HashMap;
 use std::f32::consts::PI;
 use std::sync::Arc;
 use wgpu::util::DeviceExt;
-use wgpu::{Buffer, RenderPipeline, ShaderSource};
+use wgpu::{BindGroup, BindGroupLayout, BindGroupLayoutDescriptor, Buffer, RenderPipeline, ShaderSource};
 use wgpu::{wgt::DeviceDescriptor, Features, Instance, Limits, MemoryHints, PowerPreference, RequestAdapterOptions};
 use wgpu::{wgt::TextureViewDescriptor, Device, Queue, Surface, SurfaceConfiguration};
 use winit::{dpi::PhysicalSize, window::Window};
 
+use crate::components::camera::Camera;
 use crate::components::renderable::{self, Color, PrimitiveType, RenderType, Renderable};
 use crate::components::transform::{Position, Scale, Transform};
 use crate::entities::entity::Entity;
+use crate::systems::camera_system::CameraState;
 use crate::systems::system::System;
 use crate::world::WorldView;
 
-fn create_render_pipeline(device: &Device, config: &SurfaceConfiguration) -> wgpu::RenderPipeline {
+fn create_render_pipeline(device: &Device, config: &SurfaceConfiguration, camera_bind_group_layout: &BindGroupLayout) -> wgpu::RenderPipeline {
     let shader_source = ShaderSource::Wgsl(include_str!("../shader.wgsl").into());
 
     let shader_module = device.create_shader_module(wgpu::ShaderModuleDescriptor {
@@ -23,7 +25,7 @@ fn create_render_pipeline(device: &Device, config: &SurfaceConfiguration) -> wgp
 
     let render_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
         label: None,
-        bind_group_layouts: &[],
+        bind_group_layouts: &[camera_bind_group_layout],
         push_constant_ranges: &[],
     });
 
@@ -145,6 +147,8 @@ pub struct RenderSystem {
     pub render_pipeline: RenderPipeline,
     current_render_buffer: Option<RenderBuffer>,
     buffer_cache: HashMap<u32, RenderBuffer>,
+    camera_buffer: Buffer,
+    camera_bind_group: BindGroup,
 }
 
 impl RenderSystem {
@@ -179,7 +183,38 @@ impl RenderSystem {
         let surface_configuration = surface.get_default_config(&adapter, width, height).unwrap();
         surface.configure(&device, &surface_configuration);
 
-        let render_pipeline = create_render_pipeline(&device, &surface_configuration);
+        let camera_bind_group_layout = device.create_bind_group_layout(&BindGroupLayoutDescriptor {
+            label: Some("camera_bind_group_layout"),
+            entries: &[wgpu::BindGroupLayoutEntry {
+                binding: 0,
+                visibility: wgpu::ShaderStages::VERTEX,
+                ty: wgpu::BindingType::Buffer {
+                    ty: wgpu::BufferBindingType::Uniform,
+                    has_dynamic_offset: false,
+                    min_binding_size: None,
+                },
+                count: None,
+            }],
+        });
+
+        let camera_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("camera_buffer"),
+            size: std::mem::size_of::<CameraState>() as wgpu::BufferAddress,
+            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+
+        // Create camera bind group
+        let camera_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            label: Some("camera_bind_group"),
+            layout: &camera_bind_group_layout,
+            entries: &[wgpu::BindGroupEntry {
+                binding: 0,
+                resource: camera_buffer.as_entire_binding(),
+            }],
+        });
+
+        let render_pipeline = create_render_pipeline(&device, &surface_configuration, &camera_bind_group_layout);
             
         RenderSystem {
             window,
@@ -191,7 +226,17 @@ impl RenderSystem {
             render_pipeline,
             current_render_buffer: None,
             buffer_cache: HashMap::new(),
+            camera_buffer,
+            camera_bind_group,
         }
+    }
+
+    pub fn update_camera(&mut self, view_projection: [[f32; 4]; 4]) {
+        self.queue.write_buffer(
+            &self.camera_buffer,
+            0,
+            bytemuck::cast_slice(&[view_projection]),
+        );
     }
 
     pub fn create_vertex_buffer(&self, verticles: &[f32]) -> Buffer {
@@ -231,8 +276,20 @@ impl RenderSystem {
         }   
     }
 
-    pub fn draw(&mut self, data: Vec<(Entity, &Renderable, &Transform)>) {
+    pub fn draw(&mut self, data: Vec<(Entity, &Renderable, &Transform)>, camera_state: &CameraState) {
+        println!("=== RENDER DEBUG ===");
+        println!("Camera view_projection: {:?}", camera_state.view_projection);
+        println!("Rendering {} objects", data.len());
+
+        for (entity, renderable, transform) in &data {
+            println!("Entity {}: pos=({}, {}), scale=({}, {}), visible={}", 
+                entity.id, transform.position.x, transform.position.y, 
+                transform.scale.x, transform.scale.y, renderable.visible);
+        }
+
+        let camera = &camera_state.main_camera;
         // println!("Rendering {} objects", renderables.len());
+        self.update_camera(camera_state.view_projection);
 
         let frame = self.surface.get_current_texture().expect("Failed to get current texture");
 
@@ -262,6 +319,7 @@ impl RenderSystem {
             });
 
             render_pass.set_pipeline(&self.render_pipeline);
+            render_pass.set_bind_group(0, &self.camera_bind_group, &[]);
 
             for (entity, renderable, transform) in data {
                 self.setup_primitive_buffers(entity.id, renderable, &transform);
@@ -270,18 +328,28 @@ impl RenderSystem {
                     continue;
                 }
 
+                if !self.buffer_cache.contains_key(&entity.id) {
+                    println!("Creating buffers for entity {}", entity.id);
+                    self.setup_primitive_buffers(entity.id, renderable, transform);
+                }
+
                 let current_render_buffer = self.buffer_cache.get(&entity.id).unwrap();
+                println!("Drawing entity {} with {} vertices", entity.id, current_render_buffer.vertex_count);
 
                 if let (Some(vertex_buffer), Some(index_buffer)) = (&current_render_buffer.vertex_buffer, &current_render_buffer.index_buffer) {
                     render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
                     render_pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint16);
                     render_pass.draw_indexed(0..current_render_buffer.vertex_count, 0, 0..1);
+                } else {
+                    println!("Missing buffers for entity {}", entity.id);
                 }
             }
         }
 
         self.queue.submit(Some(encoder.finish()));
         frame.present();
+
+        println!("=== END RENDER ===");
     }
 
     pub fn resize(&mut self, new_size: PhysicalSize<u32>) {
@@ -295,6 +363,8 @@ impl System for RenderSystem {
     fn update(&mut self, world: &mut WorldView) {
         let data = world.components.get_entities_with_component::<Renderable, Transform>();
 
-        self.draw(data);
+        let camera_state = world.resources.get::<CameraState>().unwrap();
+
+        self.draw(data, &camera_state);
     }
 }

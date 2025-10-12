@@ -14,4 +14,5 @@ pub struct Scale {
 pub struct Transform {
     pub position: Position,
     pub scale: Scale,
+    pub rotation: f32, // In radians
 }
