@@ -204,7 +204,6 @@ impl RenderSystem {
             mapped_at_creation: false,
         });
 
-        // Create camera bind group
         let camera_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: Some("camera_bind_group"),
             layout: &camera_bind_group_layout,
@@ -277,18 +276,8 @@ impl RenderSystem {
     }
 
     pub fn draw(&mut self, data: Vec<(Entity, &Renderable, &Transform)>, camera_state: &CameraState) {
-        println!("=== RENDER DEBUG ===");
-        println!("Camera view_projection: {:?}", camera_state.view_projection);
-        println!("Rendering {} objects", data.len());
 
-        for (entity, renderable, transform) in &data {
-            println!("Entity {}: pos=({}, {}), scale=({}, {}), visible={}", 
-                entity.id, transform.position.x, transform.position.y, 
-                transform.scale.x, transform.scale.y, renderable.visible);
-        }
-
-        let camera = &camera_state.main_camera;
-        // println!("Rendering {} objects", renderables.len());
+        // let camera = &camera_state.main_camera;
         self.update_camera(camera_state.view_projection);
 
         let frame = self.surface.get_current_texture().expect("Failed to get current texture");
@@ -329,19 +318,15 @@ impl RenderSystem {
                 }
 
                 if !self.buffer_cache.contains_key(&entity.id) {
-                    println!("Creating buffers for entity {}", entity.id);
                     self.setup_primitive_buffers(entity.id, renderable, transform);
                 }
 
                 let current_render_buffer = self.buffer_cache.get(&entity.id).unwrap();
-                println!("Drawing entity {} with {} vertices", entity.id, current_render_buffer.vertex_count);
 
                 if let (Some(vertex_buffer), Some(index_buffer)) = (&current_render_buffer.vertex_buffer, &current_render_buffer.index_buffer) {
                     render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
                     render_pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint16);
                     render_pass.draw_indexed(0..current_render_buffer.vertex_count, 0, 0..1);
-                } else {
-                    println!("Missing buffers for entity {}", entity.id);
                 }
             }
         }
@@ -349,7 +334,6 @@ impl RenderSystem {
         self.queue.submit(Some(encoder.finish()));
         frame.present();
 
-        println!("=== END RENDER ===");
     }
 
     pub fn resize(&mut self, new_size: PhysicalSize<u32>) {

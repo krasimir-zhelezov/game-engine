@@ -95,7 +95,6 @@ impl World {
 
             if let Some(transform) = self.components.get_component_mut::<Transform>(&entity) {
                 transform.position.y += 1.0;
-                println!("Entity {} moved to position: ({}, {})", entity.id, transform.position.x, transform.position.y);
             }
         }
     }

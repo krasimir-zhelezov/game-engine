@@ -26,19 +26,16 @@ impl CameraSystem {
     }
 
     fn calculate_view_projection(&self, transform: &Transform, zoom: f32, aspect_ratio: f32, near_plane: f32, far_plane: f32) -> [[f32; 4]; 4] {
-        // Create orthographic projection matrix
         let left = -aspect_ratio * zoom;
         let right = aspect_ratio * zoom;
         let bottom = -zoom;
         let top = zoom;
 
-        println!("Camera bounds: left={}, right={}, bottom={}, top={}", left, right, bottom, top);
 
-        // Correct orthographic projection matrix for 2D
         let ortho = [
             [2.0 / (right - left), 0.0, 0.0, 0.0],
             [0.0, 2.0 / (top - bottom), 0.0, 0.0],
-            [0.0, 0.0, -2.0 / (far_plane - near_plane), 0.0], // Note: negative for correct depth
+            [0.0, 0.0, -2.0 / (far_plane - near_plane), 0.0],
             [
                 -(right + left) / (right - left),
                 -(top + bottom) / (top - bottom),
@@ -47,18 +44,10 @@ impl CameraSystem {
             ],
         ];
 
-        println!("Ortho matrix: {:?}", ortho);
 
-        // For 2D, use identity view matrix
-        let view_matrix = [
-            [1.0, 0.0, 0.0, 0.0],
-            [0.0, 1.0, 0.0, 0.0],
-            [0.0, 0.0, 1.0, 0.0],
-            [0.0, 0.0, 0.0, 1.0],
-        ];
-
+        let view_matrix = self.calculate_view_matrix(transform);
         let result = self.multiply_matrices(&ortho, &view_matrix);
-        println!("Final view_projection: {:?}", result);
+
         result
     }
 
@@ -77,6 +66,29 @@ impl CameraSystem {
         
         result
     }
+
+    fn calculate_view_matrix(&self, transform: &Transform) -> [[f32; 4]; 4] {
+        /*
+            Moves the world into the camera's perspective
+         */
+        let position = transform.position;
+        let rotation = transform.rotation;
+
+        let cos_angle = rotation.cos();
+        let sin_angle = rotation.sin();
+
+        [
+            [cos_angle, sin_angle, 0.0, 0.0],
+            [-sin_angle, cos_angle, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0],
+            [
+                -position.x * cos_angle + position.y * sin_angle,
+                -position.x * sin_angle - position.y * cos_angle,
+                0.0,
+                1.0
+            ]
+        ]
+    }
 }
 
 impl System for CameraSystem {
@@ -84,11 +96,8 @@ impl System for CameraSystem {
 
         let cameras = world.components.get_entities_with_component::<Transform, Camera>();
 
-        // println!("Found {} cameras", cameras.len());
         
         if let Some((_, transform, camera)) = cameras.into_iter().next() {
-            // println!("Camera: pos=({}, {}), zoom={}, aspect={}", 
-                // transform.position.x, transform.position.y, camera.zoom, camera.aspect_ratio);
             let view_projection = self.calculate_view_projection(
                 transform, 
                 camera.zoom, 
@@ -100,8 +109,6 @@ impl System for CameraSystem {
             if let Some(camera_state) = world.resources.get_mut::<CameraState>() {
                 camera_state.main_camera = Some(camera.clone());
                 camera_state.view_projection = view_projection;
-
-                println!("View projection matrix updated");
             }
         }
     }
