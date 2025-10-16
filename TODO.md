@@ -15,3 +15,5 @@
 * ### Animation
 * ### UI
 * ### Smart entity id assigning
+* ### Remove components
+* ### Remove entities
