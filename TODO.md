@@ -6,6 +6,11 @@
 * ### ~~Component Handling~~
 * ### Memory leak (doesn't clean old buffers)
 * ### Recreates buffers every frame
-* ### Camera
+* ### ~~Camera~~
 * ### Renderable Rotation
-
+* ### Mouse Input
+* ### Velocity
+* ### Collider
+* ### Audio
+* ### Animation
+* ### UI
