@@ -13,13 +13,13 @@ pub struct World {
     pub systems: SystemManager,
     pub next_id: u32,
     pub components: ComponentStore, // Component Type to (Entity ID to Component)
-    pub entities: EntityManager,
+    pub entity_manager: EntityManager,
 }
 
 pub struct WorldView<'a> {
     pub resources: &'a mut ResourceStore,
     pub components: &'a mut ComponentStore,
-    pub entities: &'a mut EntityManager,
+    pub entity_manager: &'a mut EntityManager,
 }
 
 impl World {
@@ -32,7 +32,7 @@ impl World {
             systems: SystemManager::new(),
             next_id: 0,
             components: ComponentStore::new(),
-            entities: EntityManager::new(),
+            entity_manager: EntityManager::new(),
         };
 
         world.resources.insert(InputState::new());
@@ -42,42 +42,44 @@ impl World {
         world.systems.add_system(Box::new(pollster::block_on(RenderSystem::new(window))));
         
 
-        let player = world.entities.create_entity();
-        world.components.add_component(player, Transform {
-            position: Position { x: 0.0, y: 0.0 },
-            scale: Scale { x: 1.0, y: 1.0 },
-            rotation: 1.0,
-        });
-        world.components.add_component(player, Tag::new("Player"));
-        world.components.add_component(player, Renderable {
-            color: Color { r: 255.0, g: 0.0, b: 0.0, a: 1.0 },
-            render_type: RenderType::Primitive {
-                primitive_type: PrimitiveType::Rectangle,
-                parameters: [0.0, 0.0, 0.0, 0.0],
-            },
-            visible: true,
-        });
+        let player_id = world.entity_manager.create_entity();
+        // world.components.add_component(player, Transform {
+        //     position: Position { x: 0.0, y: 0.0 },
+        //     scale: Scale { x: 1.0, y: 1.0 },
+        //     rotation: 1.0,
+        // });
+        // world.components.add_component(player, Tag::new("Player"));
+        // world.components.add_component(player, Renderable {
+        //     color: Color { r: 255.0, g: 0.0, b: 0.0, a: 1.0 },
+        //     render_type: RenderType::Primitive {
+        //         primitive_type: PrimitiveType::Rectangle,
+        //         parameters: [0.0, 0.0, 0.0, 0.0],
+        //     },
+        //     visible: true,
+        // });
 
-        let enemy = world.entities.create_entity();
-        world.components.add_component(enemy, Transform {
-            position: Position { x: 5.0, y: 5.0 },
-            scale: Scale { x: 1.0, y: 1.0 },
-            rotation: 0.0,
-        });
+        let enemy_id = world.entity_manager.create_entity();
+        // world.components.add_component(enemy, Transform {
+        //     position: Position { x: 5.0, y: 5.0 },
+        //     scale: Scale { x: 1.0, y: 1.0 },
+        //     rotation: 0.0,
+        // });
 
-        let camera = world.entities.create_entity();
-        world.components.add_component(camera, Transform {
-            position: Position { x: 0.0, y: 0.0 },
-            scale: Scale { x: 1.0, y: 1.0 },
-            rotation: 0.0,
-        });
-        world.components.add_component(camera, Camera {
-            zoom: 10.0, // Increase zoom to see more
-            aspect_ratio: 16.0 / 9.0, // Set proper aspect ratio
-            near_plane: -100.0,
-            far_plane: 100.0,
-            fov: 1.0, // Not used in orthographic
-        });
+        let camera_id = world.entity_manager.create_entity();
+
+        println!("{:?}", (player_id, enemy_id, camera_id));
+        // world.components.add_component(camera, Transform {
+        //     position: Position { x: 0.0, y: 0.0 },
+        //     scale: Scale { x: 1.0, y: 1.0 },
+        //     rotation: 0.0,
+        // });
+        // world.components.add_component(camera, Camera {
+        //     zoom: 10.0, // Increase zoom to see more
+        //     aspect_ratio: 16.0 / 9.0, // Set proper aspect ratio
+        //     near_plane: -100.0,
+        //     far_plane: 100.0,
+        //     fov: 1.0, // Not used in orthographic
+        // });
 
         world
     }
@@ -86,16 +88,16 @@ impl World {
         self.systems.update(&mut WorldView {
             resources: &mut self.resources,
             components: &mut self.components,
-            entities: &mut self.entities,
+            entity_manager: &mut self.entity_manager,
         });
 
         let input = self.resources.get::<InputState>().unwrap();
         if input.is_key_pressed(KeyCode::KeyW) {
-            let entity = self.entities.get_entities_by_tag("Player", &self.components)[0];
+            // let entity = self.entities.get_entities_by_tag("Player", &self.components)[0];
 
-            if let Some(transform) = self.components.get_component_mut::<Transform>(&entity) {
-                transform.position.y += 1.0;
-            }
+            // if let Some(transform) = self.components.get_component_mut::<Transform>(&entity) {
+            //     transform.position.y += 1.0;
+            // }
         }
     }
 
@@ -111,7 +113,7 @@ impl World {
         let mut view = WorldView {
             resources,
             components: &mut self.components,
-            entities: &mut self.entities,
+            entity_manager: &mut self.entity_manager,
         };
 
         input_system.handle_keyboard_input(&mut view, event);
