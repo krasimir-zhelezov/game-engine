@@ -1,3 +1,5 @@
+use crate::components::component::Component;
+
 #[derive(Debug, Clone, Copy)]
 pub struct Position {
     pub x: f32,
@@ -16,3 +18,5 @@ pub struct Transform {
     pub scale: Scale,
     pub rotation: f32, // In radians
 }
+
+impl Component for Transform {}

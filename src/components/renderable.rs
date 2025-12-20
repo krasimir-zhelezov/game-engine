@@ -1,5 +1,7 @@
 use wgpu::Buffer;
 
+use crate::components::component::Component;
+
 pub enum PrimitiveType {
     Rectangle,
     Circle,
@@ -70,3 +72,5 @@ impl Renderable {
         Self::new_primitive(PrimitiveType::Line, color, [start[0], start[1], end[0], end[1]])
     }
 }
+
+impl Component for Renderable {}

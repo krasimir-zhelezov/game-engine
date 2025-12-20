@@ -1,3 +1,5 @@
+use crate::components::component::Component;
+
 pub struct Tag {
     pub name: String,
 }
@@ -9,3 +11,5 @@ impl Tag {
         }
     }
 }
+
+impl Component for Tag {}
