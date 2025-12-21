@@ -1,9 +1,35 @@
-use std::{any::{Any, TypeId}, collections::HashMap, sync::Arc, time::{Duration, Instant}};
+use std::{
+    any::{Any, TypeId},
+    collections::HashMap,
+    sync::Arc,
+    time::{Duration, Instant},
+};
 
 use wgpu::naga::Type;
-use winit::{event::{self, ElementState, KeyEvent}, keyboard::{self, Key, KeyCode, PhysicalKey}, window::Window};
+use winit::{
+    event::{self, ElementState, KeyEvent},
+    keyboard::{self, Key, KeyCode, PhysicalKey},
+    window::Window,
+};
 
-use crate::{components::{camera::Camera, component_store::ComponentStore, renderable::{Color, PrimitiveType, RenderType, Renderable}, tag::Tag, transform::{Position, Scale, Transform}}, entities::{entity::Entity, entity_manager::EntityManager}, resources::resource_store::ResourceStore, systems::{camera_system::{CameraState, CameraSystem}, input_system::{self, InputState, InputSystem}, render_system::RenderSystem, system::System, system_manager::SystemManager}};
+use crate::{
+    components::{
+        camera::Camera,
+        component_store::ComponentStore,
+        renderable::{Color, PrimitiveType, RenderType, Renderable},
+        tag::Tag,
+        transform::{Position, Scale, Transform},
+    },
+    entities::{entity::Entity, entity_manager::EntityManager},
+    resources::resource_store::ResourceStore,
+    systems::{
+        camera_system::{CameraState, CameraSystem},
+        input_system::{self, InputState, InputSystem},
+        render_system::RenderSystem,
+        system::System,
+        system_manager::SystemManager,
+    },
+};
 
 pub struct World {
     pub running: bool,
@@ -40,16 +66,22 @@ impl World {
         //world.systems.add_system(Box::new(CameraSystem::new()));
         //world.systems.add_system(Box::new(InputSystem::new()));
         //world.systems.add_system(Box::new(pollster::block_on(RenderSystem::new(window))));
-        
 
         let player_id = world.entity_manager.create_entity();
-        world.components.add_component::<Transform>(player_id, Transform {
-            position: Position { x: 0.0, y: 0.0 },
-            scale: Scale { x: 1.0, y: 1.0 },
-            rotation: 1.0,
-        });
+        world.components.add_component::<Transform>(
+            player_id,
+            Transform {
+                position: Position { x: 0.0, y: 0.0 },
+                scale: Scale { x: 1.0, y: 1.0 },
+                rotation: 1.0,
+            },
+        );
 
-        let a = world.components.get_component::<Transform>();
+        let a = world.components.get_component_mut::<Transform>();
+
+        let transform = a[player_id].as_mut().unwrap();
+
+        transform.position = Position { x: 2.0, y: 3.0 };
 
         println!("{:#?}", a[player_id].as_ref().unwrap());
 
@@ -110,7 +142,9 @@ impl World {
     }
 
     pub fn handle_keyboard_input(&mut self, event: &KeyEvent) {
-        let Self { resources, systems, .. } = self;
+        let Self {
+            resources, systems, ..
+        } = self;
 
         let input_system = systems.get_system_mut::<InputSystem>().unwrap();
 

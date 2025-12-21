@@ -35,16 +35,12 @@ impl ComponentStore {
         boxed_vec.downcast_ref::<Vec<Option<T>>>().unwrap()
     }
 
-    pub fn get_component_mut<T: 'static>(&mut self, entity_id: usize) -> Option<&mut T> {
-        None
-        // let type_id = TypeId::of::<T>();
+    pub fn get_component_mut<T: 'static>(&mut self) -> &mut Vec<Option<T>> {
+        let type_id = TypeId::of::<T>();
 
-        // match self.components.get(&type_id)?.get_mut(entity_id) {
-        //     Some(Some(boxed_any)) => {
-        //         boxed_any.downcast_mut::<T>()
-        //     },
-        //     _ => None
-        // }
+        let boxed_vec = self.components.get_mut(&type_id).expect("Error: No entities with this component found!");
+
+        boxed_vec.downcast_mut::<Vec<Option<T>>>().unwrap()
     }
 
     pub fn get_entities_with_component<T: 'static, U: 'static>(&self) -> Vec<(Entity, &T, &U)> {
