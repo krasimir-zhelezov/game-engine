@@ -2,9 +2,14 @@ use std::collections::HashMap;
 use std::f32::consts::PI;
 use std::sync::Arc;
 use wgpu::util::DeviceExt;
-use wgpu::{BindGroup, BindGroupLayout, BindGroupLayoutDescriptor, Buffer, RenderPipeline, ShaderSource};
-use wgpu::{wgt::DeviceDescriptor, Features, Instance, Limits, MemoryHints, PowerPreference, RequestAdapterOptions};
-use wgpu::{wgt::TextureViewDescriptor, Device, Queue, Surface, SurfaceConfiguration};
+use wgpu::{
+    BindGroup, BindGroupLayout, BindGroupLayoutDescriptor, Buffer, RenderPipeline, ShaderSource,
+};
+use wgpu::{Device, Queue, Surface, SurfaceConfiguration, wgt::TextureViewDescriptor};
+use wgpu::{
+    Features, Instance, Limits, MemoryHints, PowerPreference, RequestAdapterOptions,
+    wgt::DeviceDescriptor,
+};
 use winit::{dpi::PhysicalSize, window::Window};
 
 use crate::components::camera::Camera;
@@ -15,7 +20,11 @@ use crate::systems::camera_system::CameraState;
 use crate::systems::system::System;
 use crate::world::WorldView;
 
-fn create_render_pipeline(device: &Device, config: &SurfaceConfiguration, camera_bind_group_layout: &BindGroupLayout) -> wgpu::RenderPipeline {
+fn create_render_pipeline(
+    device: &Device,
+    config: &SurfaceConfiguration,
+    camera_bind_group_layout: &BindGroupLayout,
+) -> wgpu::RenderPipeline {
     let shader_source = ShaderSource::Wgsl(include_str!("../shader.wgsl").into());
 
     let shader_module = device.create_shader_module(wgpu::ShaderModuleDescriptor {
@@ -87,12 +96,36 @@ fn create_render_pipeline(device: &Device, config: &SurfaceConfiguration, camera
     })
 }
 
-fn create_rectangle_verticles(scale: Scale, color: Color, position: Position) -> (Vec<f32>, Vec<u16>) {
+fn create_rectangle_verticles(
+    scale: Scale,
+    color: Color,
+    position: Position,
+) -> (Vec<f32>, Vec<u16>) {
     let verticles = vec![
-        position.x - scale.x, position.y - scale.y,     color.r, color.g, color.b, color.a,
-        position.x + scale.x, position.y - scale.y,      color.r, color.g, color.b, color.a,
-        position.x + scale.x, position.y + scale.y,       color.r, color.g, color.b, color.a,
-        position.x - scale.x, position.y + scale.y,      color.r, color.g, color.b, color.a,
+        position.x - scale.x,
+        position.y - scale.y,
+        color.r,
+        color.g,
+        color.b,
+        color.a,
+        position.x + scale.x,
+        position.y - scale.y,
+        color.r,
+        color.g,
+        color.b,
+        color.a,
+        position.x + scale.x,
+        position.y + scale.y,
+        color.r,
+        color.g,
+        color.b,
+        color.a,
+        position.x - scale.x,
+        position.y + scale.y,
+        color.r,
+        color.g,
+        color.b,
+        color.a,
     ];
 
     let indices = vec![0, 1, 2, 0, 2, 3];
@@ -100,7 +133,12 @@ fn create_rectangle_verticles(scale: Scale, color: Color, position: Position) ->
     (verticles, indices)
 }
 
-fn create_circle_verticles(segments: u16, scale: Scale, color: Color, position: Position) -> (Vec<f32>, Vec<u16>) {
+fn create_circle_verticles(
+    segments: u16,
+    scale: Scale,
+    color: Color,
+    position: Position,
+) -> (Vec<f32>, Vec<u16>) {
     let mut verticles = Vec::new();
     let mut indices = Vec::new();
 
@@ -121,10 +159,7 @@ fn create_circle_verticles(segments: u16, scale: Scale, color: Color, position: 
 }
 
 fn create_line_verticles() -> (Vec<f32>, Vec<u16>) {
-    let verticles = vec![
-        -0.5, 0.0,     1.0, 0.0, 0.0, 1.0,
-        0.5, 0.0,      1.0, 0.0, 0.0, 1.0,
-    ];
+    let verticles = vec![-0.5, 0.0, 1.0, 0.0, 0.0, 1.0, 0.5, 0.0, 1.0, 0.0, 0.0, 1.0];
 
     let indices = vec![0, 1];
 
@@ -157,25 +192,25 @@ impl RenderSystem {
 
         let surface = instance.create_surface(window.clone()).unwrap();
 
-        let adapter = instance.request_adapter(&RequestAdapterOptions {
-            power_preference: PowerPreference::default(),
-            force_fallback_adapter: false,
-            compatible_surface: Some(&surface)
-        })
-        .await
-        .expect("Could not get an open GPU adapter");
+        let adapter = instance
+            .request_adapter(&RequestAdapterOptions {
+                power_preference: PowerPreference::default(),
+                force_fallback_adapter: false,
+                compatible_surface: Some(&surface),
+            })
+            .await
+            .expect("Could not get an open GPU adapter");
 
-        let (device, queue) = adapter.request_device(
-            &DeviceDescriptor {
+        let (device, queue) = adapter
+            .request_device(&DeviceDescriptor {
                 label: None,
                 required_features: Features::empty(),
                 required_limits: Limits::default(),
                 memory_hints: MemoryHints::Performance,
                 trace: Default::default(),
-            }
-        )
-        .await
-        .expect("Failed to get device");
+            })
+            .await
+            .expect("Failed to get device");
 
         let size = window.inner_size();
         let width = size.width.max(1);
@@ -183,19 +218,20 @@ impl RenderSystem {
         let surface_configuration = surface.get_default_config(&adapter, width, height).unwrap();
         surface.configure(&device, &surface_configuration);
 
-        let camera_bind_group_layout = device.create_bind_group_layout(&BindGroupLayoutDescriptor {
-            label: Some("camera_bind_group_layout"),
-            entries: &[wgpu::BindGroupLayoutEntry {
-                binding: 0,
-                visibility: wgpu::ShaderStages::VERTEX,
-                ty: wgpu::BindingType::Buffer {
-                    ty: wgpu::BufferBindingType::Uniform,
-                    has_dynamic_offset: false,
-                    min_binding_size: None,
-                },
-                count: None,
-            }],
-        });
+        let camera_bind_group_layout =
+            device.create_bind_group_layout(&BindGroupLayoutDescriptor {
+                label: Some("camera_bind_group_layout"),
+                entries: &[wgpu::BindGroupLayoutEntry {
+                    binding: 0,
+                    visibility: wgpu::ShaderStages::VERTEX,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Uniform,
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                }],
+            });
 
         let camera_buffer = device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("camera_buffer"),
@@ -213,8 +249,9 @@ impl RenderSystem {
             }],
         });
 
-        let render_pipeline = create_render_pipeline(&device, &surface_configuration, &camera_bind_group_layout);
-            
+        let render_pipeline =
+            create_render_pipeline(&device, &surface_configuration, &camera_bind_group_layout);
+
         RenderSystem {
             window,
             instance,
@@ -239,116 +276,149 @@ impl RenderSystem {
     }
 
     pub fn create_vertex_buffer(&self, verticles: &[f32]) -> Buffer {
-        self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: None,
-            contents: bytemuck::cast_slice(verticles),
-            usage: wgpu::BufferUsages::VERTEX,
-        })
+        self.device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: None,
+                contents: bytemuck::cast_slice(verticles),
+                usage: wgpu::BufferUsages::VERTEX,
+            })
     }
 
     pub fn create_index_buffer(&self, indices: &[u16]) -> Buffer {
-        self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: None,
-            contents: bytemuck::cast_slice(indices),
-            usage: wgpu::BufferUsages::INDEX,
-        })
+        self.device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: None,
+                contents: bytemuck::cast_slice(indices),
+                usage: wgpu::BufferUsages::INDEX,
+            })
     }
 
-    pub fn setup_primitive_buffers(&mut self, entity_id: u32, renderable: &Renderable, transform: &Transform) {
+    pub fn setup_primitive_buffers(
+        &mut self,
+        entity_id: usize,
+        renderable: &Renderable,
+        transform: &Transform,
+    ) {
         match &renderable.render_type {
             RenderType::Primitive { primitive_type, .. } => {
                 let (verticles, indices) = match primitive_type {
-                    PrimitiveType::Rectangle => create_rectangle_verticles(transform.scale, renderable.color, transform.position),
-                    PrimitiveType::Circle => create_circle_verticles(16, transform.scale, renderable.color, transform.position),
+                    PrimitiveType::Rectangle => create_rectangle_verticles(
+                        transform.scale,
+                        renderable.color,
+                        transform.position,
+                    ),
+                    PrimitiveType::Circle => create_circle_verticles(
+                        16,
+                        transform.scale,
+                        renderable.color,
+                        transform.position,
+                    ),
                     PrimitiveType::Line => create_line_verticles(),
                 };
 
-                self.buffer_cache.insert(entity_id, RenderBuffer {
-                    vertex_buffer: Some(self.create_vertex_buffer(&verticles)),
-                    index_buffer: Some(self.create_index_buffer(&indices)),
-                    vertex_count: indices.len() as u32,
-                });
-            },
+                self.buffer_cache.insert(
+                    entity_id as u32, // ! it must not exceed 2^32-1
+                    RenderBuffer {
+                        vertex_buffer: Some(self.create_vertex_buffer(&verticles)),
+                        index_buffer: Some(self.create_index_buffer(&indices)),
+                        vertex_count: indices.len() as u32,
+                    },
+                );
+            }
             RenderType::Texture { .. } => {
                 todo!("Implement texture rendering");
             }
-        }   
+        }
     }
 
-    pub fn draw(&mut self, data: Vec<(Entity, &Renderable, &Transform)>, camera_state: &CameraState) {
-
+    pub fn draw(
+        &mut self,
+        transforms: &Vec<Option<Transform>>,
+        renderables: &Vec<Option<Renderable>>,
+        camera_state: &CameraState,
+    ) {
         // let camera = &camera_state.main_camera;
         self.update_camera(camera_state.view_projection);
 
-        let frame = self.surface.get_current_texture().expect("Failed to get current texture");
+        let frame = self
+            .surface
+            .get_current_texture()
+            .expect("Failed to get current texture");
 
         let view = frame.texture.create_view(&TextureViewDescriptor::default());
 
         let mut encoder = self
             .device
-            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
-                label: None,
-            });
+            .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
 
         {
-            let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor { 
-                label: None, 
-                color_attachments: &[Some(wgpu::RenderPassColorAttachment { 
-                    view: &view, 
-                    depth_slice: None, 
-                    resolve_target: None, 
-                    ops: wgpu::Operations { 
-                        load: wgpu::LoadOp::Clear(wgpu::Color::BLACK), 
-                        store: wgpu::StoreOp::Store 
-                    }
-                })], 
-                depth_stencil_attachment: None, 
-                timestamp_writes: None, 
-                occlusion_query_set: None 
+            let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                label: None,
+                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                    view: &view,
+                    depth_slice: None,
+                    resolve_target: None,
+                    ops: wgpu::Operations {
+                        load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
+                        store: wgpu::StoreOp::Store,
+                    },
+                })],
+                depth_stencil_attachment: None,
+                timestamp_writes: None,
+                occlusion_query_set: None,
             });
 
             render_pass.set_pipeline(&self.render_pipeline);
             render_pass.set_bind_group(0, &self.camera_bind_group, &[]);
 
-            for (entity, renderable, transform) in data {
-                self.setup_primitive_buffers(entity.id, renderable, &transform);
+            for (id, (transform_opt, renderable_opt)) in
+                transforms.iter().zip(renderables.iter()).enumerate()
+            {
+                if let (Some(transform), Some(renderable)) = (transform_opt, renderable_opt) {
+                    self.setup_primitive_buffers(id, renderable, &transform);
 
-                if !renderable.visible {
-                    continue;
-                }
+                    if !renderable.visible {
+                        continue;
+                    }
 
-                if !self.buffer_cache.contains_key(&entity.id) {
-                    self.setup_primitive_buffers(entity.id, renderable, transform);
-                }
+                    if !self.buffer_cache.contains_key(&(id as u32)) {  // ! id must not exceed 2^32-1
+                        self.setup_primitive_buffers(id, renderable, transform);
+                    }
 
-                let current_render_buffer = self.buffer_cache.get(&entity.id).unwrap();
+                    let current_render_buffer = self.buffer_cache.get(&(id as u32)).unwrap();  // ! id must not exceed 2^32-1
 
-                if let (Some(vertex_buffer), Some(index_buffer)) = (&current_render_buffer.vertex_buffer, &current_render_buffer.index_buffer) {
-                    render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
-                    render_pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint16);
-                    render_pass.draw_indexed(0..current_render_buffer.vertex_count, 0, 0..1);
+                    if let (Some(vertex_buffer), Some(index_buffer)) = (
+                        &current_render_buffer.vertex_buffer,
+                        &current_render_buffer.index_buffer,
+                    ) {
+                        render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
+                        render_pass
+                            .set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint16);
+                        render_pass.draw_indexed(0..current_render_buffer.vertex_count, 0, 0..1);
+                    }
                 }
             }
         }
 
         self.queue.submit(Some(encoder.finish()));
         frame.present();
-
     }
 
     pub fn resize(&mut self, new_size: PhysicalSize<u32>) {
         self.surface_configuration.width = new_size.width.max(1);
         self.surface_configuration.height = new_size.height.max(1);
-        self.surface.configure(&self.device, &self.surface_configuration);
+        self.surface
+            .configure(&self.device, &self.surface_configuration);
     }
 }
 
 impl System for RenderSystem {
     fn update(&mut self, world: &mut WorldView) {
-        let data = world.components.get_entities_with_component::<Renderable, Transform>();
+        let transforms = world.components.get_component::<Transform>();
+        let renderables = world.components.get_component::<Renderable>();
 
         let camera_state = world.resources.get::<CameraState>().unwrap();
 
-        self.draw(data, &camera_state);
+        self.draw(transforms, renderables, &camera_state);
     }
 }

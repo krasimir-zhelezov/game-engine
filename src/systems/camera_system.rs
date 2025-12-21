@@ -1,7 +1,7 @@
 use crate::{
     components::{camera::Camera, transform::Transform},
     systems::system::System,
-    world::WorldView
+    world::WorldView,
 };
 
 pub struct CameraState {
@@ -25,12 +25,18 @@ impl CameraSystem {
         Self {}
     }
 
-    fn calculate_view_projection(&self, transform: &Transform, zoom: f32, aspect_ratio: f32, near_plane: f32, far_plane: f32) -> [[f32; 4]; 4] {
+    fn calculate_view_projection(
+        &self,
+        transform: &Transform,
+        zoom: f32,
+        aspect_ratio: f32,
+        near_plane: f32,
+        far_plane: f32,
+    ) -> [[f32; 4]; 4] {
         let left = -aspect_ratio * zoom;
         let right = aspect_ratio * zoom;
         let bottom = -zoom;
         let top = zoom;
-
 
         let ortho = [
             [2.0 / (right - left), 0.0, 0.0, 0.0],
@@ -44,7 +50,6 @@ impl CameraSystem {
             ],
         ];
 
-
         let view_matrix = self.calculate_view_matrix(transform);
         let result = self.multiply_matrices(&ortho, &view_matrix);
 
@@ -53,7 +58,7 @@ impl CameraSystem {
 
     fn multiply_matrices(&self, a: &[[f32; 4]; 4], b: &[[f32; 4]; 4]) -> [[f32; 4]; 4] {
         let mut result = [[0.0; 4]; 4];
-        
+
         for i in 0..4 {
             for k in 0..4 {
                 if a[i][k] != 0.0 {
@@ -63,14 +68,14 @@ impl CameraSystem {
                 }
             }
         }
-        
+
         result
     }
 
     fn calculate_view_matrix(&self, transform: &Transform) -> [[f32; 4]; 4] {
         /*
-            Moves the world into the camera's perspective
-         */
+           Moves the world into the camera's perspective
+        */
         let position = transform.position;
         let rotation = transform.rotation;
 
@@ -85,30 +90,33 @@ impl CameraSystem {
                 -position.x * cos_angle + position.y * sin_angle,
                 -position.x * sin_angle - position.y * cos_angle,
                 0.0,
-                1.0
-            ]
+                1.0,
+            ],
         ]
     }
 }
 
 impl System for CameraSystem {
     fn update(&mut self, world: &mut WorldView) {
+        let cameras: &Vec<Option<Camera>> = world.components.get_component::<Camera>();
+        let transforms: &Vec<Option<Transform>> = world.components.get_component::<Transform>();
 
-        let cameras = world.components.get_entities_with_component::<Transform, Camera>();
+        for (camera_opt, transform_opt) in cameras.iter().zip(transforms.iter()) {
+            if let (Some(camera), Some(transform)) = (camera_opt, transform_opt) {
+                let view_projection = self.calculate_view_projection(
+                    transform,
+                    camera.zoom,
+                    camera.aspect_ratio,
+                    camera.near_plane,
+                    camera.far_plane,
+                );
 
-        
-        if let Some((_, transform, camera)) = cameras.into_iter().next() {
-            let view_projection = self.calculate_view_projection(
-                transform, 
-                camera.zoom, 
-                camera.aspect_ratio, 
-                camera.near_plane, 
-                camera.far_plane
-            );
-
-            if let Some(camera_state) = world.resources.get_mut::<CameraState>() {
-                camera_state.main_camera = Some(camera.clone());
-                camera_state.view_projection = view_projection;
+                if let Some(camera_state) = world.resources.get_mut::<CameraState>() {
+                    camera_state.main_camera = Some(camera.clone());
+                    camera_state.view_projection = view_projection;
+                }
+                
+                break;
             }
         }
     }
