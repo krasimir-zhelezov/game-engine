@@ -1,6 +1,6 @@
 use std::{any::{Any, TypeId}, boxed, collections::HashMap, hash::Hash};
 
-use crate::{components::component::Component, entities::entity::{self, Entity}};
+use crate::{components::{component::Component, tag::Tag}, entities::entity::{self, Entity}};
 
 pub struct ComponentStore {
     components: HashMap<TypeId, Box<dyn Any>>,

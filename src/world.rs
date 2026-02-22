@@ -14,20 +14,12 @@ use winit::{
 
 use crate::{
     components::{
-        camera::Camera,
-        component_store::ComponentStore,
-        renderable::{Color, PrimitiveType, RenderType, Renderable},
-        tag::Tag,
-        transform::{Position, Scale, Transform},
+        camera::Camera, component_store::ComponentStore, custom::player_controller::PlayerController, renderable::{Color, PrimitiveType, RenderType, Renderable}, tag::Tag, transform::{Position, Scale, Transform}
     },
     entities::{entity::Entity, entity_manager::EntityManager},
     resources::resource_store::ResourceStore,
     systems::{
-        camera_system::{CameraState, CameraSystem},
-        input_system::{self, InputState, InputSystem},
-        render_system::RenderSystem,
-        system::System,
-        system_manager::SystemManager,
+        camera_system::{CameraState, CameraSystem}, custom::player_movement_system::PlayerMovementSystem, input_system::{self, InputState, InputSystem}, render_system::RenderSystem, system::System, system_manager::SystemManager
     },
 };
 
@@ -64,8 +56,11 @@ impl World {
         world.resources.insert(InputState::new());
         world.resources.insert(CameraState::new());
         world.systems.add_system(Box::new(CameraSystem::new()));
-        world.systems.add_system(Box::new(InputSystem::new()));
+
+        world.systems.add_system(Box::new(PlayerMovementSystem::new()));
+
         world.systems.add_system(Box::new(pollster::block_on(RenderSystem::new(window))));
+        world.systems.add_system(Box::new(InputSystem::new()));
 
         let camera_id = world.entity_manager.create_entity();
         world.components.add_component(camera_id, Transform {
@@ -98,6 +93,9 @@ impl World {
             },
             visible: true,
         });
+        world.components.add_component(player_id, PlayerController {
+            movement_speed: 1.0,
+        });
         
         // world.components.add_component(player_id, Tag::new("Player"));
         // let enemy_id = world.entity_manager.create_entity();
@@ -117,16 +115,6 @@ impl World {
             entity_manager: &mut self.entity_manager,
         });
 
-        let input = self.resources.get::<InputState>().unwrap();
-        if input.is_key_held(KeyCode::KeyW) {
-            println!("W is holding");
-        }
-        if input.is_key_just_pressed(KeyCode::KeyW) {
-            println!("W is just pressed");
-        }
-        if input.is_key_just_released(KeyCode::KeyW) {
-            println!("W is just released");
-        }
         //     // let entity = self.entities.get_entities_by_tag("Player", &self.components)[0];
 
         //     // if let Some(transform) = self.components.get_component_mut::<Transform>(&entity) {
