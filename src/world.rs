@@ -117,10 +117,16 @@ impl World {
             entity_manager: &mut self.entity_manager,
         });
 
-        // let input = self.resources.get::<InputState>().unwrap();
-        // if input.is_key_pressed(KeyCode::KeyW) {
-        //     println!("Key pressed")
-        // }
+        let input = self.resources.get::<InputState>().unwrap();
+        if input.is_key_held(KeyCode::KeyW) {
+            println!("W is holding");
+        }
+        if input.is_key_just_pressed(KeyCode::KeyW) {
+            println!("W is just pressed");
+        }
+        if input.is_key_just_released(KeyCode::KeyW) {
+            println!("W is just released");
+        }
         //     // let entity = self.entities.get_entities_by_tag("Player", &self.components)[0];
 
         //     // if let Some(transform) = self.components.get_component_mut::<Transform>(&entity) {
