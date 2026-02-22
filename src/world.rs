@@ -61,10 +61,10 @@ impl World {
             entity_manager: EntityManager::new(),
         };
 
-        //world.resources.insert(InputState::new());
+        world.resources.insert(InputState::new());
         world.resources.insert(CameraState::new());
         world.systems.add_system(Box::new(CameraSystem::new()));
-        //world.systems.add_system(Box::new(InputSystem::new()));
+        world.systems.add_system(Box::new(InputSystem::new()));
         world.systems.add_system(Box::new(pollster::block_on(RenderSystem::new(window))));
 
         let camera_id = world.entity_manager.create_entity();
@@ -75,7 +75,7 @@ impl World {
         });
         world.components.add_component(camera_id, Camera {
             zoom: 10.0, // Increase zoom to see more
-            aspect_ratio: 16.0 / 9.0,
+            aspect_ratio: 4.0 / 3.0, // 16.0 / 9.0,
             near_plane: -100.0,
             far_plane: 100.0,
             fov: 1.0, // Not used in orthographic
@@ -119,6 +119,8 @@ impl World {
 
         // let input = self.resources.get::<InputState>().unwrap();
         // if input.is_key_pressed(KeyCode::KeyW) {
+        //     println!("Key pressed")
+        // }
         //     // let entity = self.entities.get_entities_by_tag("Player", &self.components)[0];
 
         //     // if let Some(transform) = self.components.get_component_mut::<Transform>(&entity) {

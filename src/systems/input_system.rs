@@ -34,12 +34,15 @@ impl InputSystem {
                 if let PhysicalKey::Code(key_code) = event.physical_key {
                     let input_state = world.resources.get_mut::<InputState>().unwrap();
                     input_state.keys.insert(key_code, true);
+
+                    println!("Key pressed: {:#?}", key_code);
                 }
             }
             ElementState::Released => {
                 if let PhysicalKey::Code(key_code) = event.physical_key {
                     let input_state = world.resources.get_mut::<InputState>().unwrap();
                     input_state.keys.remove(&key_code);
+                    println!("Key released: {:#?}", key_code);
                 }
             }
         }
