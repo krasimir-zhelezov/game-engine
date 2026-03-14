@@ -2,8 +2,26 @@ use std::{any::{Any, TypeId}, boxed, collections::HashMap, hash::Hash};
 
 use crate::{components::{component::Component, tag::Tag}};
 
+pub trait ComponentVec {
+    fn remove_entity(&mut self, entity_id: usize);
+    
+    fn as_any(&self) -> &dyn Any;
+    fn as_any_mut(&mut self) -> &mut dyn Any;
+}
+
+impl<T: 'static> ComponentVec for Vec<Option<T>> {
+    fn remove_entity(&mut self, entity_id: usize) {
+        if entity_id < self.len() {
+            self[entity_id] = None;
+        }
+    }
+
+    fn as_any(&self) -> &dyn Any { self }
+    fn as_any_mut(&mut self) -> &mut dyn Any { self }
+}
+
 pub struct ComponentStore {
-    components: HashMap<TypeId, Box<dyn Any>>,
+    components: HashMap<TypeId, Box<dyn ComponentVec>>,
 }
 
 impl ComponentStore {
@@ -13,12 +31,12 @@ impl ComponentStore {
         }
     }
 
-    pub fn add_component<T: 'static>(&mut self, entity_id: u32, component: T) {
+    pub fn add_component<T: Component + 'static>(&mut self, entity_id: u32, component: T) {
         let type_id = TypeId::of::<T>();
 
         let boxed_vec = self.components.entry(type_id).or_insert(Box::new(Vec::<Option<T>>::new()));
 
-        let component_vec: &mut Vec<Option<T>> = boxed_vec.downcast_mut::<Vec<Option<T>>>().unwrap();
+        let component_vec: &mut Vec<Option<T>> = boxed_vec.as_any_mut().downcast_mut::<Vec<Option<T>>>().unwrap();
 
         let index = entity_id as usize;
 
@@ -29,19 +47,26 @@ impl ComponentStore {
         component_vec[index] = Some(component);
     }
 
-    pub fn get_component<T: 'static>(&self) -> &Vec<Option<T>> {
+    pub fn get_component<T: Component + 'static>(&self) -> &Vec<Option<T>> {
         let type_id = TypeId::of::<T>();
 
         let boxed_vec = self.components.get(&type_id).expect("Error: No entities with this component found!");
 
-        boxed_vec.downcast_ref::<Vec<Option<T>>>().unwrap()
+        boxed_vec.as_any().downcast_ref::<Vec<Option<T>>>().unwrap()
     }
 
-    pub fn get_component_mut<T: 'static>(&mut self) -> &mut Vec<Option<T>> {
+    pub fn get_component_mut<T: Component + 'static>(&mut self) -> &mut Vec<Option<T>> {
         let type_id = TypeId::of::<T>();
 
         let boxed_vec = self.components.get_mut(&type_id).expect("Error: No entities with this component found!");
 
-        boxed_vec.downcast_mut::<Vec<Option<T>>>().unwrap()
+        boxed_vec.as_any_mut().downcast_mut::<Vec<Option<T>>>().unwrap()
+    }
+
+    pub fn remove_entity(&mut self, entity_id: u32) {
+        let index = entity_id as usize;
+        for component_array in self.components.values_mut() {
+            component_array.remove_entity(index);
+        }
     }
 }

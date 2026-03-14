@@ -146,4 +146,50 @@ impl World {
     pub fn handle_mouse_input(&self) {
         todo!();
     }
+
+    pub fn delete_entity(&mut self, entity_id: u32) {
+        self.entity_manager.delete_entity(entity_id);
+
+        self.components.remove_entity(entity_id);
+    }
+}
+
+// --- End of your existing world.rs code ---
+
+#[cfg(test)]
+mod tests {
+    use super::*; 
+
+    #[test]
+    fn test_entity_deletion() {
+        let mut entity_manager = EntityManager::new();
+        let mut components = ComponentStore::new();
+
+        let id = entity_manager.create_entity();
+        
+        components.add_component(id, Transform {
+            position: Position { x: 10.0, y: 10.0 },
+            scale: Scale { x: 1.0, y: 1.0 },
+            rotation: 0.0,
+        });
+
+        let transforms = components.get_component::<Transform>();
+        assert!(transforms[id as usize].is_some(), "Component should exist after creation");
+
+        entity_manager.delete_entity(id);
+        components.remove_entity(id);
+
+        let transforms_after = components.get_component::<Transform>();
+        assert!(
+            transforms_after[id as usize].is_none(), 
+            "Component should be None after deletion"
+        );
+
+        let new_id = entity_manager.create_entity();
+        assert_eq!(
+            id, 
+            new_id, 
+            "The EntityManager should hand out the recycled ID next"
+        );
+    }
 }
