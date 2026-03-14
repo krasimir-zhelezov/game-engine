@@ -11,7 +11,7 @@ impl ApplicationHandler for App {
     fn resumed(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {
         let mut attributes = Window::default_attributes();
 
-        attributes.title = "Game Engine 2D".to_string();
+        attributes.title = "Skalora Game Engine".to_string();
 
         let window = Arc::new(event_loop.create_window(attributes).unwrap());
 
