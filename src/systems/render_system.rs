@@ -280,7 +280,7 @@ impl RenderSystem {
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: None,
                 contents: bytemuck::cast_slice(verticles),
-                usage: wgpu::BufferUsages::VERTEX,
+                usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
             })
     }
 
@@ -375,7 +375,7 @@ impl RenderSystem {
                 transforms.iter().zip(renderables.iter()).enumerate()
             {
                 if let (Some(transform), Some(renderable)) = (transform_opt, renderable_opt) {
-                    self.setup_primitive_buffers(id, renderable, &transform);
+                    // self.setup_primitive_buffers(id, renderable, &transform);
 
                     if !renderable.visible {
                         continue;
@@ -383,6 +383,20 @@ impl RenderSystem {
 
                     if !self.buffer_cache.contains_key(&(id as u32)) {  // ! id must not exceed 2^32-1
                         self.setup_primitive_buffers(id, renderable, transform);
+                    } else {
+                        let (verticles, _) = match &renderable.render_type {
+                            RenderType::Primitive { primitive_type, parameters } => match primitive_type {
+                                PrimitiveType::Rectangle => create_rectangle_verticles(transform.scale, renderable.color, transform.position),
+                                PrimitiveType::Circle => create_circle_verticles(16, transform.scale, renderable.color, transform.position),
+                                PrimitiveType::Line => create_line_verticles()
+                            },
+                            RenderType::Texture { .. } => todo!("Implement texture rendering"),
+                        };
+
+                        let current_render_buffer = self.buffer_cache.get(&(id as u32)).unwrap();
+                        if let Some(vertex_buffer) = &current_render_buffer.vertex_buffer {
+                            self.queue.write_buffer(vertex_buffer, 0, bytemuck::cast_slice(&verticles));
+                        }
                     }
 
                     let current_render_buffer = self.buffer_cache.get(&(id as u32)).unwrap();  // ! id must not exceed 2^32-1
