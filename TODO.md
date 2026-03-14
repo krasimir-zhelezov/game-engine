@@ -4,7 +4,7 @@
 * ### ~~Game Object / Entity~~
 * ### Texture Rendering
 * ### ~~Component Handling~~
-* ### Memory leak (doesn't clean old buffers)
+* ### ~~Memory leak (doesn't clean old buffers)~~
 * ### Recreates buffers every frame
 * ### ~~Camera~~
 * ### Renderable Rotation
