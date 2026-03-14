@@ -143,14 +143,58 @@ impl World {
         input_system.handle_keyboard_input(&mut view, event);
     }
 
-    pub fn handle_mouse_input(&self) {
-        todo!();
-    }
-
     pub fn delete_entity(&mut self, entity_id: u32) {
         self.entity_manager.delete_entity(entity_id);
 
         self.components.remove_entity(entity_id);
+    }
+
+    pub fn handle_mouse_button(&mut self, state: ElementState, button: winit::event::MouseButton) {
+        let input_system = self.systems.get_system_mut::<InputSystem>().unwrap();
+
+        let mut view = WorldView {
+            resources: &mut self.resources,
+            components: &mut self.components,
+            entity_manager: &mut self.entity_manager,
+        };
+
+        input_system.handle_mouse_button(&mut view, state, button);
+    }
+
+    pub fn handle_cursor_moved(&mut self, position: winit::dpi::PhysicalPosition<f64>) {
+        let input_system = self.systems.get_system_mut::<InputSystem>().unwrap();
+
+        let mut view = WorldView {
+            resources: &mut self.resources,
+            components: &mut self.components,
+            entity_manager: &mut self.entity_manager,
+        };
+
+        input_system.handle_cursor_moved(&mut view, position);
+    }
+
+    pub fn handle_mouse_wheel(&mut self, delta: winit::event::MouseScrollDelta) {
+        let input_system = self.systems.get_system_mut::<InputSystem>().unwrap();
+
+        let mut view = WorldView {
+            resources: &mut self.resources,
+            components: &mut self.components,
+            entity_manager: &mut self.entity_manager,
+        };
+
+        input_system.handle_mouse_wheel(&mut view, delta);
+    }
+
+    pub fn handle_mouse_motion(&mut self, delta: (f64, f64)) {
+        let input_system = self.systems.get_system_mut::<InputSystem>().unwrap();
+
+        let mut view = WorldView {
+            resources: &mut self.resources,
+            components: &mut self.components,
+            entity_manager: &mut self.entity_manager,
+        };
+
+        input_system.handle_mouse_motion(&mut view, delta);
     }
 }
 

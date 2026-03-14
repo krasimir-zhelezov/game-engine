@@ -1,6 +1,13 @@
-use std::{sync::Arc, time::{Duration, Instant}};
+use std::{
+    sync::Arc,
+    time::{Duration, Instant},
+};
 
-use winit::{application::ApplicationHandler, event::WindowEvent, window::{self, Fullscreen, Window}};
+use winit::{
+    application::ApplicationHandler,
+    event::WindowEvent,
+    window::{self, Fullscreen, Window},
+};
 
 use crate::{app::App, world::World};
 
@@ -25,7 +32,7 @@ impl ApplicationHandler for App {
         if let Some(window) = &self.window {
             window.request_redraw();
         }
-    } 
+    }
 
     fn window_event(
         &mut self,
@@ -61,16 +68,37 @@ impl ApplicationHandler for App {
                     }
                 }
             }
-            WindowEvent::KeyboardInput { device_id, event, is_synthetic } => {
+            WindowEvent::KeyboardInput {
+                device_id,
+                event,
+                is_synthetic,
+            } => {
                 if let Some(world) = &mut self.world {
                     world.handle_keyboard_input(&event);
                 }
             }
-            WindowEvent::MouseInput { device_id, state, button } => {
+            WindowEvent::MouseInput {
+                device_id,
+                state,
+                button,
+            } => {
                 println!("Mouse button event: {:?}", button);
             }
-            WindowEvent::Resized(new_size) => {
-               
+            WindowEvent::Resized(new_size) => {}
+            WindowEvent::MouseInput { state, button, .. } => {
+                if let Some(world) = &mut self.world {
+                    world.handle_mouse_button(state, button);
+                }
+            }
+            WindowEvent::CursorMoved { position, .. } => {
+                if let Some(world) = &mut self.world {
+                    world.handle_cursor_moved(position);
+                }
+            }
+            WindowEvent::MouseWheel { delta, .. } => {
+                if let Some(world) = &mut self.world {
+                    world.handle_mouse_wheel(delta);
+                }
             }
             _ => {}
         }
