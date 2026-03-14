@@ -17,3 +17,4 @@
 * ### Smart entity id assigning
 * ### Remove components
 * ### Remove entities
+* ### Find a way to fix the empty spaces in vectors of systems/components

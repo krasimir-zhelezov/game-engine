@@ -16,7 +16,7 @@ use crate::{
     components::{
         camera::Camera, component_store::ComponentStore, custom::player_controller::PlayerController, renderable::{Color, PrimitiveType, RenderType, Renderable}, tag::Tag, transform::{Position, Scale, Transform}
     },
-    entities::{entity::Entity, entity_manager::EntityManager},
+    entities::{entity_manager::EntityManager},
     resources::resource_store::ResourceStore,
     systems::{
         camera_system::{CameraState, CameraSystem}, custom::player_movement_system::PlayerMovementSystem, input_system::{self, InputState, InputSystem}, render_system::RenderSystem, system::System, system_manager::SystemManager

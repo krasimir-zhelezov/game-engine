@@ -15,7 +15,6 @@ use winit::{dpi::PhysicalSize, window::Window};
 use crate::components::camera::Camera;
 use crate::components::renderable::{self, Color, PrimitiveType, RenderType, Renderable};
 use crate::components::transform::{Position, Scale, Transform};
-use crate::entities::entity::Entity;
 use crate::systems::camera_system::CameraState;
 use crate::systems::system::System;
 use crate::world::WorldView;
