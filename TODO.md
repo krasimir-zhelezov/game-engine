@@ -8,7 +8,7 @@
 * ### ~~Recreates buffers every frame~~
 * ### ~~Camera~~
 * ### Renderable Rotation
-* ### Mouse Input
+* ### ~~Mouse Input~~
 * ### Velocity
 * ### Collider
 * ### Audio
