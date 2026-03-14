@@ -5,7 +5,7 @@
 * ### Texture Rendering
 * ### ~~Component Handling~~
 * ### ~~Memory leak (doesn't clean old buffers)~~
-* ### Recreates buffers every frame
+* ### ~~Recreates buffers every frame~~
 * ### ~~Camera~~
 * ### Renderable Rotation
 * ### Mouse Input
@@ -14,7 +14,7 @@
 * ### Audio
 * ### Animation
 * ### UI
-* ### Smart entity id assigning
+* ### ~~Smart entity id assigning~~
 * ### Remove components
-* ### Remove entities
+* ### ~~Remove entities~~
 * ### Find a way to fix the empty spaces in vectors of systems/components
