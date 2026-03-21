@@ -85,14 +85,7 @@ impl World {
                 rotation: 1.0,
             },
         );
-        world.components.add_component(player_id, Renderable {
-            color: Color { r: 255.0, g: 0.0, b: 0.0, a: 1.0 },
-            render_type: RenderType::Primitive {
-                primitive_type: PrimitiveType::Rectangle,
-                parameters: [0.0, 0.0, 0.0, 0.0],
-            },
-            visible: true,
-        });
+        world.components.add_component(player_id, Renderable::new_texture("assets/player.png"));
         world.components.add_component(player_id, PlayerController {
             movement_speed: 1.0,
         });

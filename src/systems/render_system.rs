@@ -12,7 +12,6 @@ use wgpu::{
 };
 use winit::{dpi::PhysicalSize, window::Window};
 
-use crate::components::camera::Camera;
 use crate::components::renderable::{self, Color, PrimitiveType, RenderType, Renderable};
 use crate::components::transform::{Position, Scale, Transform};
 use crate::systems::camera_system::CameraState;
@@ -23,6 +22,7 @@ fn create_render_pipeline(
     device: &Device,
     config: &SurfaceConfiguration,
     camera_bind_group_layout: &BindGroupLayout,
+    texture_bind_group_layout: &BindGroupLayout,
 ) -> wgpu::RenderPipeline {
     let shader_source = ShaderSource::Wgsl(include_str!("../shader.wgsl").into());
 
@@ -33,7 +33,7 @@ fn create_render_pipeline(
 
     let render_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
         label: None,
-        bind_group_layouts: &[camera_bind_group_layout],
+        bind_group_layouts: &[camera_bind_group_layout, texture_bind_group_layout],
         push_constant_ranges: &[],
     });
 
@@ -41,17 +41,22 @@ fn create_render_pipeline(
         wgpu::VertexAttribute {
             format: wgpu::VertexFormat::Float32x2,
             offset: 0,
-            shader_location: 0,
+            shader_location: 0, // position
         },
         wgpu::VertexAttribute {
             format: wgpu::VertexFormat::Float32x4,
             offset: std::mem::size_of::<[f32; 2]>() as wgpu::BufferAddress,
-            shader_location: 1,
+            shader_location: 1, // color
+        },
+        wgpu::VertexAttribute {
+            format: wgpu::VertexFormat::Float32x2,
+            offset: std::mem::size_of::<[f32; 6]>() as wgpu::BufferAddress,
+            shader_location: 2,
         },
     ];
 
     let vertex_buffer_layout = wgpu::VertexBufferLayout {
-        array_stride: std::mem::size_of::<[f32; 6]>() as wgpu::BufferAddress,
+        array_stride: std::mem::size_of::<[f32; 8]>() as wgpu::BufferAddress,
         step_mode: wgpu::VertexStepMode::Vertex,
         attributes: &vertex_atrributes,
     };
@@ -107,24 +112,32 @@ fn create_rectangle_verticles(
         color.g,
         color.b,
         color.a,
+        0.0,
+        1.0,
         position.x + scale.x,
         position.y - scale.y,
         color.r,
         color.g,
         color.b,
         color.a,
+        1.0,
+        1.0,
         position.x + scale.x,
         position.y + scale.y,
         color.r,
         color.g,
         color.b,
         color.a,
+        1.0,
+        0.0,
         position.x - scale.x,
         position.y + scale.y,
         color.r,
         color.g,
         color.b,
         color.a,
+        0.0,
+        0.0,
     ];
 
     let indices = vec![0, 1, 2, 0, 2, 3];
@@ -169,6 +182,7 @@ struct RenderBuffer {
     pub vertex_buffer: Option<Buffer>,
     pub index_buffer: Option<Buffer>,
     pub vertex_count: u32,
+    pub bind_group: Arc<BindGroup>,
 }
 
 pub struct RenderSystem {
@@ -179,6 +193,8 @@ pub struct RenderSystem {
     pub device: Device,
     pub queue: Queue,
     pub render_pipeline: RenderPipeline,
+    pub texture_bind_group_layout: BindGroupLayout,
+    pub default_white_texture_bind_group: Arc<BindGroup>,
     current_render_buffer: Option<RenderBuffer>,
     buffer_cache: HashMap<u32, RenderBuffer>,
     camera_buffer: Buffer,
@@ -248,8 +264,44 @@ impl RenderSystem {
             }],
         });
 
-        let render_pipeline =
-            create_render_pipeline(&device, &surface_configuration, &camera_bind_group_layout);
+        let texture_bind_group_layout =
+            device.create_bind_group_layout(&BindGroupLayoutDescriptor {
+                label: Some("texture_bind_group_layout"),
+                entries: &[
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 0,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Texture {
+                            sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                            view_dimension: wgpu::TextureViewDimension::D2,
+                            multisampled: false,
+                        },
+                        count: None,
+                    },
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 1,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+                        count: None,
+                    },
+                ],
+            });
+
+        let default_bind_group = Arc::new(Self::create_texture_bind_group_from_bytes(
+            &device,
+            &queue,
+            &texture_bind_group_layout,
+            &[255, 255, 255, 255],
+            1,
+            1,
+        ));
+
+        let render_pipeline = create_render_pipeline(
+            &device,
+            &surface_configuration,
+            &camera_bind_group_layout,
+            &texture_bind_group_layout,
+        );
 
         RenderSystem {
             window,
@@ -263,7 +315,77 @@ impl RenderSystem {
             buffer_cache: HashMap::new(),
             camera_buffer,
             camera_bind_group,
+            texture_bind_group_layout,
+            default_white_texture_bind_group: default_bind_group,
         }
+    }
+
+    pub fn create_texture_bind_group_from_bytes(
+        device: &Device,
+        queue: &Queue,
+        layout: &BindGroupLayout,
+        rgba_bytes: &[u8],
+        width: u32,
+        height: u32,
+    ) -> BindGroup {
+        let texture_size = wgpu::Extent3d {
+            width,
+            height,
+            depth_or_array_layers: 1,
+        };
+
+        let texture = device.create_texture(&wgpu::TextureDescriptor {
+            size: texture_size,
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: wgpu::TextureFormat::Rgba8UnormSrgb,
+            usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+            label: Some("Entity Texture"),
+            view_formats: &[],
+        });
+
+        queue.write_texture(
+            wgpu::TexelCopyTextureInfo {
+                texture: &texture,
+                mip_level: 0,
+                origin: wgpu::Origin3d::ZERO,
+                aspect: wgpu::TextureAspect::All,
+            },
+            rgba_bytes,
+            wgpu::TexelCopyBufferLayout {
+                offset: 0,
+                bytes_per_row: Some(4 * width),
+                rows_per_image: Some(height),
+            },
+            texture_size,
+        );
+
+        let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
+        let sampler = device.create_sampler(&wgpu::SamplerDescriptor {
+            address_mode_u: wgpu::AddressMode::ClampToEdge,
+            address_mode_v: wgpu::AddressMode::ClampToEdge,
+            address_mode_w: wgpu::AddressMode::ClampToEdge,
+            mag_filter: wgpu::FilterMode::Linear,
+            min_filter: wgpu::FilterMode::Nearest,
+            mipmap_filter: wgpu::FilterMode::Nearest,
+            ..Default::default()
+        });
+
+        device.create_bind_group(&wgpu::BindGroupDescriptor {
+            layout,
+            entries: &[
+                wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: wgpu::BindingResource::TextureView(&view),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 1,
+                    resource: wgpu::BindingResource::Sampler(&sampler),
+                },
+            ],
+            label: Some("texture_bind_group"),
+        })
     }
 
     pub fn update_camera(&mut self, view_projection: [[f32; 4]; 4]) {
@@ -298,36 +420,54 @@ impl RenderSystem {
         renderable: &Renderable,
         transform: &Transform,
     ) {
-        match &renderable.render_type {
+        let (verticles, indices, bind_group) = match &renderable.render_type {
             RenderType::Primitive { primitive_type, .. } => {
-                let (verticles, indices) = match primitive_type {
+                let (v, i) = match primitive_type {
                     PrimitiveType::Rectangle => create_rectangle_verticles(
                         transform.scale,
                         renderable.color,
                         transform.position,
                     ),
-                    PrimitiveType::Circle => create_circle_verticles(
-                        16,
-                        transform.scale,
-                        renderable.color,
-                        transform.position,
-                    ),
-                    PrimitiveType::Line => create_line_verticles(),
+                    // ... handle circle/line ...
+                    _ => create_line_verticles(),
                 };
-
-                self.buffer_cache.insert(
-                    entity_id as u32, // ! it must not exceed 2^32-1
-                    RenderBuffer {
-                        vertex_buffer: Some(self.create_vertex_buffer(&verticles)),
-                        index_buffer: Some(self.create_index_buffer(&indices)),
-                        vertex_count: indices.len() as u32,
-                    },
+                // Primitives use the default white texture!
+                (v, i, self.default_white_texture_bind_group.clone())
+            }
+            RenderType::Texture {
+                image_data,
+                width,
+                height,
+            } => {
+                // Assuming your enum holds these
+                let (v, i) = create_rectangle_verticles(
+                    transform.scale,
+                    renderable.color,
+                    transform.position,
                 );
+
+                let bind_group = Arc::new(RenderSystem::create_texture_bind_group_from_bytes(
+                    &self.device,
+                    &self.queue,
+                    &self.texture_bind_group_layout,
+                    image_data,
+                    *width,
+                    *height,
+                ));
+
+                (v, i, bind_group)
             }
-            RenderType::Texture { .. } => {
-                todo!("Implement texture rendering");
-            }
-        }
+        };
+
+        self.buffer_cache.insert(
+            entity_id as u32,
+            RenderBuffer {
+                vertex_buffer: Some(self.create_vertex_buffer(&verticles)),
+                index_buffer: Some(self.create_index_buffer(&indices)),
+                vertex_count: indices.len() as u32,
+                bind_group, // Store it here!
+            },
+        );
     }
 
     pub fn draw(
@@ -380,25 +520,48 @@ impl RenderSystem {
                         continue;
                     }
 
-                    if !self.buffer_cache.contains_key(&(id as u32)) {  // ! id must not exceed 2^32-1
+                    if !self.buffer_cache.contains_key(&(id as u32)) {
+                        // ! id must not exceed 2^32-1
                         self.setup_primitive_buffers(id, renderable, transform);
                     } else {
                         let (verticles, _) = match &renderable.render_type {
-                            RenderType::Primitive { primitive_type, parameters } => match primitive_type {
-                                PrimitiveType::Rectangle => create_rectangle_verticles(transform.scale, renderable.color, transform.position),
-                                PrimitiveType::Circle => create_circle_verticles(16, transform.scale, renderable.color, transform.position),
-                                PrimitiveType::Line => create_line_verticles()
+                            RenderType::Primitive {
+                                primitive_type,
+                                parameters,
+                            } => match primitive_type {
+                                PrimitiveType::Rectangle => create_rectangle_verticles(
+                                    transform.scale,
+                                    renderable.color,
+                                    transform.position,
+                                ),
+                                PrimitiveType::Circle => create_circle_verticles(
+                                    16,
+                                    transform.scale,
+                                    renderable.color,
+                                    transform.position,
+                                ),
+                                PrimitiveType::Line => create_line_verticles(),
                             },
-                            RenderType::Texture { .. } => todo!("Implement texture rendering"),
+                            RenderType::Texture { width, height, .. } => {
+                                create_rectangle_verticles(
+                                    transform.scale,
+                                    renderable.color,
+                                    transform.position,
+                                )
+                            }
                         };
 
                         let current_render_buffer = self.buffer_cache.get(&(id as u32)).unwrap();
                         if let Some(vertex_buffer) = &current_render_buffer.vertex_buffer {
-                            self.queue.write_buffer(vertex_buffer, 0, bytemuck::cast_slice(&verticles));
+                            self.queue.write_buffer(
+                                vertex_buffer,
+                                0,
+                                bytemuck::cast_slice(&verticles),
+                            );
                         }
                     }
 
-                    let current_render_buffer = self.buffer_cache.get(&(id as u32)).unwrap();  // ! id must not exceed 2^32-1
+                    let current_render_buffer = self.buffer_cache.get(&(id as u32)).unwrap(); // ! id must not exceed 2^32-1
 
                     if let (Some(vertex_buffer), Some(index_buffer)) = (
                         &current_render_buffer.vertex_buffer,
@@ -407,6 +570,9 @@ impl RenderSystem {
                         render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
                         render_pass
                             .set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint16);
+
+                        render_pass.set_bind_group(1, &*current_render_buffer.bind_group, &[]);
+
                         render_pass.draw_indexed(0..current_render_buffer.vertex_count, 0, 0..1);
                     }
                 }

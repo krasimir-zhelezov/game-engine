@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use wgpu::Buffer;
 
 use crate::components::component::Component;
@@ -39,7 +41,11 @@ pub enum RenderType {
         primitive_type: PrimitiveType,
         parameters: [f32; 4],
     },
-    Texture
+    Texture {
+        image_data: Vec<u8>,
+        width: u32,
+        height: u32,
+    }
 }
 
 pub struct Renderable {
@@ -70,6 +76,23 @@ impl Renderable {
 
     pub fn new_line(color: Color, start: [f32; 2], end: [f32; 2]) -> Self {
         Self::new_primitive(PrimitiveType::Line, color, [start[0], start[1], end[0], end[1]])
+    }
+
+    pub fn new_texture<P: AsRef<Path>>(file_path: P) -> Self {
+        let img = image::open(file_path).expect("Failed to load image file");
+        let rgba_image = img.into_rgba8(); 
+        let (width, height) = rgba_image.dimensions(); 
+        let image_data = rgba_image.into_raw(); 
+
+        Self {
+            render_type: RenderType::Texture {
+                image_data,
+                width,
+                height,
+            },
+            color: Color::WHITE, 
+            visible: true,
+        }
     }
 }
 

@@ -1,20 +1,42 @@
-* ### ~~Transform Component~~
-* ### ~~Fix Primitive Circle~~
-* ### Triangle Primitive
-* ### ~~Game Object / Entity~~
-* ### Texture Rendering
-* ### ~~Component Handling~~
-* ### ~~Memory leak (doesn't clean old buffers)~~
-* ### ~~Recreates buffers every frame~~
-* ### ~~Camera~~
-* ### Renderable Rotation
-* ### ~~Mouse Input~~
-* ### Velocity
-* ### Collider
-* ### Audio
-* ### Animation
-* ### UI
-* ### ~~Smart entity id assigning~~
-* ### Remove components
-* ### ~~Remove entities~~
-* ### Find a way to fix the empty spaces in vectors of systems/components
+### Features
+* Triangle Primitive
+* Renderable Rotation
+* Velocity
+* Collider
+* Audio
+* Animation
+* UI
+* Remove components
+
+* ~~Transform Component~~
+* ~~Game Object / Entity~~
+* ~~Remove entities~~
+* ~~Camera~~
+* ~~Component Handling~~
+* ~~Mouse Input~~
+* ~~Smart entity id assigning~~
+* ~~Texture Rendering~~
+
+### Problems
+* Find a way to fix the empty spaces in vectors of systems/components
+* Texture loader will load the same texture 100 times if it's used 100 times
+* Blurry textures
+
+* ~~Fix Primitive Circle~~
+* ~~Memory leak (doesn't clean old buffers)~~
+* ~~Recreates buffers every frame~~
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
