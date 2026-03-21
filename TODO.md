@@ -20,8 +20,8 @@
 ### Problems
 * Find a way to fix the empty spaces in vectors of systems/components
 * Texture loader will load the same texture 100 times if it's used 100 times
-* Blurry textures
 
+* ~~Blurry textures~~
 * ~~Fix Primitive Circle~~
 * ~~Memory leak (doesn't clean old buffers)~~
 * ~~Recreates buffers every frame~~
