@@ -20,6 +20,7 @@
 ### Problems
 * Find a way to fix the empty spaces in vectors of systems/components
 * Texture loader will load the same texture 100 times if it's used 100 times
+* Sub-pixel distortion eg. "fat pixel"
 
 * ~~Blurry textures~~
 * ~~Fix Primitive Circle~~
