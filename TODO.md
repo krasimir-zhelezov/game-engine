@@ -1,7 +1,6 @@
 ### Features
 * Triangle Primitive
 * Renderable Rotation
-* Velocity
 * Collider
 * Audio
 * Animation
@@ -22,6 +21,7 @@
 * ~~Show FPS~~
 * ~~Entity counter~~
 * ~~Stress Test System~~
+* ~~Velocity System~~
 
 ### Problems
 * Find a way to fix the empty spaces in vectors of systems/components
