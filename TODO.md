@@ -8,7 +8,7 @@
 * UI
 * Remove components
 * Assets Manager
-* Debug Tools (Draw colliders, Show FPS, Entity count)
+* Debug Tools (Draw colliders)
 * Logging
 
 * ~~Transform Component~~
@@ -19,6 +19,8 @@
 * ~~Mouse Input~~
 * ~~Smart entity id assigning~~
 * ~~Texture Rendering~~
+* ~~Show FPS~~
+* ~~Entity counter~~
 
 ### Problems
 * Find a way to fix the empty spaces in vectors of systems/components
