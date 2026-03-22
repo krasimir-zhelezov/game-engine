@@ -7,6 +7,9 @@
 * Animation
 * UI
 * Remove components
+* Assets Manager
+* Debug Tools (Draw colliders, Show FPS, Entity count)
+* Logging
 
 * ~~Transform Component~~
 * ~~Game Object / Entity~~
@@ -26,18 +29,3 @@
 * ~~Fix Primitive Circle~~
 * ~~Memory leak (doesn't clean old buffers)~~
 * ~~Recreates buffers every frame~~
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
