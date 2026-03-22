@@ -33,6 +33,10 @@ pub struct World {
     pub components: ComponentStore, // Component Type to (Entity ID to Component)
     pub entity_manager: EntityManager,
     pub window: Arc<Window>,
+
+    pub fps: u32,
+    frame_count: u32,
+    fps_timer: Instant,
 }
 
 pub struct WorldView<'a> {
@@ -53,6 +57,10 @@ impl World {
             components: ComponentStore::new(),
             entity_manager: EntityManager::new(),
             window: window.clone(),
+
+            fps: 0,
+            frame_count: 0,
+            fps_timer: Instant::now(),
         };
 
         world.resources.insert(InputState::new());
@@ -109,7 +117,15 @@ impl World {
             entity_manager: &mut self.entity_manager,
         });
 
-        let title = format!("Skalora 2D Game Engine | Entities: {}", self.entity_manager.entity_count);
+        self.frame_count += 1;
+
+        if self.fps_timer.elapsed() >= Duration::from_secs(1) {
+            self.fps = self.frame_count;
+            self.frame_count = 0;
+            self.fps_timer = Instant::now();
+        }
+
+        let title = format!("Skalora 2D Game Engine | FPS: {} | Entities: {}", self.fps, self.entity_manager.entity_count);
 
         self.window.set_title(&title);
 
