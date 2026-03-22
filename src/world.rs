@@ -19,7 +19,7 @@ use crate::{
     entities::{entity_manager::EntityManager},
     resources::resource_store::ResourceStore,
     systems::{
-        camera_system::{CameraState, CameraSystem}, custom::player_movement_system::PlayerMovementSystem, input_system::{self, InputState, InputSystem}, render_system::RenderSystem, system::System, system_manager::SystemManager
+        camera_system::{CameraState, CameraSystem}, custom::player_movement_system::PlayerMovementSystem, custom::stress_test_system::StressTestSystem, input_system::{self, InputState, InputSystem}, render_system::RenderSystem, system::System, system_manager::SystemManager
     },
 };
 
@@ -70,6 +70,7 @@ impl World {
         world.systems.add_system(Box::new(PlayerMovementSystem::new()));
         world.systems.add_system(Box::new(pollster::block_on(RenderSystem::new(window))));
         world.systems.add_system(Box::new(InputSystem::new()));
+        // world.systems.add_system(Box::new(StressTestSystem::new(100)));
 
         let camera_id = world.entity_manager.create_entity();
         world.components.add_component(camera_id, Transform {
