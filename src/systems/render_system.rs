@@ -598,6 +598,6 @@ impl System for RenderSystem {
 
         let camera_state = world.resources.get::<CameraState>().unwrap();
 
-        self.draw(transforms, renderables, &camera_state);
+        self.draw(&*transforms, &*renderables, &camera_state);
     }
 }

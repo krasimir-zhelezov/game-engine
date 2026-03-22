@@ -98,8 +98,8 @@ impl CameraSystem {
 
 impl System for CameraSystem {
     fn update(&mut self, world: &mut WorldView) {
-        let cameras: &Vec<Option<Camera>> = world.components.get_component::<Camera>();
-        let transforms: &Vec<Option<Transform>> = world.components.get_component::<Transform>();
+        let cameras = world.components.get_component::<Camera>();
+        let transforms= world.components.get_component::<Transform>();
 
         for (camera_opt, transform_opt) in cameras.iter().zip(transforms.iter()) {
             if let (Some(camera), Some(transform)) = (camera_opt, transform_opt) {

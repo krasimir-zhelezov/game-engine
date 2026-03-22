@@ -68,7 +68,7 @@ impl System for PlayerMovementSystem {
             }
         }
 
-        let transforms = world.components.get_component_mut::<Transform>();
+        let mut transforms = world.components.get_component_mut::<Transform>();
 
         for (id, speed) in active_movements {
             // We use the saved `id` to index directly into the transforms array
