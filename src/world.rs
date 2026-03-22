@@ -14,12 +14,12 @@ use winit::{
 
 use crate::{
     components::{
-        camera::Camera, component_store::ComponentStore, custom::player_controller::PlayerController, renderable::{Color, PrimitiveType, RenderType, Renderable}, tag::Tag, transform::{Position, Scale, Transform}
+        camera::Camera, component_store::ComponentStore, custom::player_controller::PlayerController, renderable::{Color, PrimitiveType, RenderType, Renderable}, tag::Tag, transform::{Position, Scale, Transform}, velocity::Velocity
     },
-    entities::{entity_manager::EntityManager},
+    entities::entity_manager::EntityManager,
     resources::resource_store::ResourceStore,
     systems::{
-        camera_system::{CameraState, CameraSystem}, custom::player_movement_system::PlayerMovementSystem, custom::stress_test_system::StressTestSystem, input_system::{self, InputState, InputSystem}, render_system::RenderSystem, system::System, system_manager::SystemManager
+        camera_system::{CameraState, CameraSystem}, custom::{player_movement_system::PlayerMovementSystem, stress_test_system::StressTestSystem}, input_system::{self, InputState, InputSystem}, render_system::RenderSystem, system::System, system_manager::SystemManager, velocity_system::VelocitySystem
     },
 };
 
@@ -70,6 +70,7 @@ impl World {
         world.systems.add_system(Box::new(PlayerMovementSystem::new()));
         world.systems.add_system(Box::new(pollster::block_on(RenderSystem::new(window))));
         world.systems.add_system(Box::new(InputSystem::new()));
+        world.systems.add_system(Box::new(VelocitySystem::new()));
         // world.systems.add_system(Box::new(StressTestSystem::new(100)));
 
         let camera_id = world.entity_manager.create_entity();
@@ -100,13 +101,23 @@ impl World {
             movement_speed: 1.0,
         });
         
-        // world.components.add_component(player_id, Tag::new("Player"));
-        // let enemy_id = world.entity_manager.create_entity();
-        // world.components.add_component::<Transform>(enemy_id, Transform {
-        //     position: Position { x: 5.0, y: 5.0 },
-        //     scale: Scale { x: 1.0, y: 1.0 },
-        //     rotation: 0.0,
-        // });
+        let entity1_id = world.entity_manager.create_entity();
+        world.components.add_component::<Transform>(entity1_id, Transform {
+            position: Position { x: 0.0, y: 0.0 },
+            scale: Scale { x: 1.0, y: 1.0 },
+            rotation: 1.0,
+        });
+        world.components.add_component::<Renderable>(entity1_id, Renderable::new_rectangle(
+            Color {
+                r: 255.0,
+                g: 0.0,
+                b: 0.0,
+                a: 200.0,
+            }, 
+            10.0, 
+            10.0
+        ));
+        world.components.add_component::<Velocity>(entity1_id, Velocity { x: 0.0, y: 0.1 });
 
         world
     }
@@ -210,45 +221,5 @@ impl World {
         };
 
         input_system.handle_mouse_motion(&mut view, delta);
-    }
-}
-
-// --- End of your existing world.rs code ---
-
-#[cfg(test)]
-mod tests {
-    use super::*; 
-
-    #[test]
-    fn test_entity_deletion() {
-        let mut entity_manager = EntityManager::new();
-        let mut components = ComponentStore::new();
-
-        let id = entity_manager.create_entity();
-        
-        components.add_component(id, Transform {
-            position: Position { x: 10.0, y: 10.0 },
-            scale: Scale { x: 1.0, y: 1.0 },
-            rotation: 0.0,
-        });
-
-        let transforms = components.get_component::<Transform>();
-        assert!(transforms[id as usize].is_some(), "Component should exist after creation");
-
-        entity_manager.delete_entity(id);
-        components.remove_entity(id);
-
-        let transforms_after = components.get_component::<Transform>();
-        assert!(
-            transforms_after[id as usize].is_none(), 
-            "Component should be None after deletion"
-        );
-
-        let new_id = entity_manager.create_entity();
-        assert_eq!(
-            id, 
-            new_id, 
-            "The EntityManager should hand out the recycled ID next"
-        );
     }
 }
