@@ -21,6 +21,7 @@
 * ~~Texture Rendering~~
 * ~~Show FPS~~
 * ~~Entity counter~~
+* ~~Stress Test System~~
 
 ### Problems
 * Find a way to fix the empty spaces in vectors of systems/components
