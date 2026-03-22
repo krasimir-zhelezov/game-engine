@@ -32,6 +32,7 @@ pub struct World {
     pub next_id: u32,
     pub components: ComponentStore, // Component Type to (Entity ID to Component)
     pub entity_manager: EntityManager,
+    pub window: Arc<Window>,
 }
 
 pub struct WorldView<'a> {
@@ -51,14 +52,14 @@ impl World {
             next_id: 0,
             components: ComponentStore::new(),
             entity_manager: EntityManager::new(),
+            window: window.clone(),
         };
 
         world.resources.insert(InputState::new());
         world.resources.insert(CameraState::new());
+
         world.systems.add_system(Box::new(CameraSystem::new()));
-
         world.systems.add_system(Box::new(PlayerMovementSystem::new()));
-
         world.systems.add_system(Box::new(pollster::block_on(RenderSystem::new(window))));
         world.systems.add_system(Box::new(InputSystem::new()));
 
@@ -107,6 +108,10 @@ impl World {
             components: &mut self.components,
             entity_manager: &mut self.entity_manager,
         });
+
+        let title = format!("Skalora 2D Game Engine | Entities: {}", self.entity_manager.entity_count);
+
+        self.window.set_title(&title);
 
         //     // let entity = self.entities.get_entities_by_tag("Player", &self.components)[0];
 
