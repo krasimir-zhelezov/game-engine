@@ -6,10 +6,10 @@
 * Animation
 * UI
 * Remove components
-* Assets Manager
 * Debug Tools (Draw colliders)
 * Logging
 
+* ~~Assets Manager~~
 * ~~Transform Component~~
 * ~~Game Object / Entity~~
 * ~~Remove entities~~
@@ -25,11 +25,11 @@
 
 ### Problems
 * Find a way to fix the empty spaces in vectors of systems/components
-* Texture loader will load the same texture 100 times if it's used 100 times
 * Sub-pixel distortion eg. "fat pixel"
 * Components of deleted entities are not deleted
 * When using texture it copies the image data multiple times
 
+* ~~Texture loader will load the same texture 100 times if it's used 100 times~~
 * ~~Blurry textures~~
 * ~~Fix Primitive Circle~~
 * ~~Memory leak (doesn't clean old buffers)~~
