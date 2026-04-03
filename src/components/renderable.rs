@@ -2,7 +2,7 @@ use std::path::Path;
 
 use wgpu::Buffer;
 
-use crate::components::component::Component;
+use crate::{components::component::Component, resources::asset_manager::Texture};
 
 pub enum PrimitiveType {
     Rectangle,
@@ -78,17 +78,12 @@ impl Renderable {
         Self::new_primitive(PrimitiveType::Line, color, [start[0], start[1], end[0], end[1]])
     }
 
-    pub fn new_texture<P: AsRef<Path>>(file_path: P) -> Self {
-        let img = image::open(file_path).expect("Failed to load image file");
-        let rgba_image = img.into_rgba8(); 
-        let (width, height) = rgba_image.dimensions(); 
-        let image_data = rgba_image.into_raw(); 
-
+    pub fn new_texture(texture: &Texture) -> Self {
         Self {
             render_type: RenderType::Texture {
-                image_data,
-                width,
-                height,
+                image_data: texture.image_data.clone(),
+                width: texture.width,
+                height: texture.height,
             },
             color: Color::WHITE, 
             visible: true,

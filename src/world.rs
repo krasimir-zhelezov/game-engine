@@ -17,7 +17,7 @@ use crate::{
         camera::Camera, component_store::ComponentStore, custom::player_controller::PlayerController, renderable::{Color, PrimitiveType, RenderType, Renderable}, tag::Tag, transform::{Position, Scale, Transform}, velocity::Velocity
     },
     entities::entity_manager::EntityManager,
-    resources::resource_store::ResourceStore,
+    resources::{asset_manager::{self, AssetManager}, resource_store::ResourceStore},
     systems::{
         camera_system::{CameraState, CameraSystem}, custom::{player_movement_system::PlayerMovementSystem, stress_test_system::StressTestSystem}, input_system::{self, InputState, InputSystem}, render_system::RenderSystem, system::System, system_manager::SystemManager, velocity_system::VelocitySystem
     },
@@ -62,6 +62,8 @@ impl World {
             frame_count: 0,
             fps_timer: Instant::now(),
         };
+        
+        let asset_manager = AssetManager::new();
 
         world.resources.insert(InputState::new());
         world.resources.insert(CameraState::new());
@@ -96,7 +98,7 @@ impl World {
                 rotation: 1.0,
             },
         );
-        world.components.add_component(player_id, Renderable::new_texture("assets/player.png"));
+        world.components.add_component(player_id, Renderable::new_texture(asset_manager.get_texture("player.png").unwrap()));
         world.components.add_component(player_id, PlayerController {
             movement_speed: 1.0,
         });
