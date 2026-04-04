@@ -69,6 +69,14 @@ impl World {
         world.resources.insert(CameraState::new());
         world.resources.insert(CollisionEvents::default());
 
+        world.components.register_component::<Transform>();
+        world.components.register_component::<Camera>();
+        world.components.register_component::<Renderable>();
+        world.components.register_component::<PlayerController>();
+        world.components.register_component::<Collider>();
+        world.components.register_component::<Velocity>();
+        world.components.register_component::<Tag>();
+
         world.systems.add_system(Box::new(CameraSystem::new()));
         world.systems.add_system(Box::new(PlayerMovementSystem::new()));
         world.systems.add_system(Box::new(pollster::block_on(RenderSystem::new(window))));

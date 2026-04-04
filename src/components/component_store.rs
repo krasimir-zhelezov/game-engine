@@ -31,6 +31,13 @@ impl ComponentStore {
         }
     }
 
+    pub fn register_component<T: Component + 'static>(&mut self) {
+        let type_id = TypeId::of::<T>();
+        self.components.entry(type_id).or_insert_with(|| {
+            RefCell::new(Box::new(Vec::<Option<T>>::new()))
+        });
+    }
+
     pub fn add_component<T: Component + 'static>(&mut self, entity_id: u32, component: T) {
         let type_id = TypeId::of::<T>();
 
@@ -52,17 +59,17 @@ impl ComponentStore {
     pub fn get_component<T: Component + 'static>(&self) -> Ref<'_, Vec<Option<T>>> {
         let type_id = TypeId::of::<T>();
 
-        let cell = self.components.get(&type_id).expect("Error: No entities with this component found");
+        let cell = self.components.get(&type_id).unwrap_or_else(|| panic!("Error: Component is not registered"));
 
         Ref::map(cell.borrow(), |boxed_vec| {
             boxed_vec.as_any().downcast_ref::<Vec<Option<T>>>().unwrap()
         })
     }
 
-    pub fn get_component_mut<T: Component + 'static>(&self) -> RefMut<Vec<Option<T>>> {
+    pub fn get_component_mut<T: Component + 'static>(&self) -> RefMut<'_, Vec<Option<T>>> {
         let type_id = TypeId::of::<T>();
 
-        let cell = self.components.get(&type_id).expect("Error: No entities with this component found");
+        let cell = self.components.get(&type_id).expect("Error: Component is not registered");
 
         RefMut::map(cell.borrow_mut(), |boxed_vec| {
             boxed_vec.as_any_mut().downcast_mut::<Vec<Option<T>>>().unwrap()
