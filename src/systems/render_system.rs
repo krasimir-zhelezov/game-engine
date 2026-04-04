@@ -12,6 +12,7 @@ use wgpu::{
 };
 use winit::{dpi::PhysicalSize, window::Window};
 
+use crate::components::collider::{Collider, ColliderShape};
 use crate::components::renderable::{self, Color, PrimitiveType, RenderType, Renderable};
 use crate::components::transform::{Position, Scale, Transform};
 use crate::systems::camera_system::CameraState;
@@ -105,33 +106,36 @@ fn create_rectangle_verticles(
     color: Color,
     position: Position,
 ) -> (Vec<f32>, Vec<u16>) {
+    let hw = scale.x / 2.0; 
+    let hh = scale.y / 2.0;
+
     let verticles = vec![
-        position.x - scale.x,
-        position.y - scale.y,
+        position.x - hw,
+        position.y - hh,
         color.r,
         color.g,
         color.b,
         color.a,
         0.0,
         1.0,
-        position.x + scale.x,
-        position.y - scale.y,
+        position.x + hw,
+        position.y - hh,
         color.r,
         color.g,
         color.b,
         color.a,
         1.0,
         1.0,
-        position.x + scale.x,
-        position.y + scale.y,
+        position.x + hw,
+        position.y + hh,
         color.r,
         color.g,
         color.b,
         color.a,
         1.0,
         0.0,
-        position.x - scale.x,
-        position.y + scale.y,
+        position.x - hw,
+        position.y + hh,
         color.r,
         color.g,
         color.b,
@@ -197,6 +201,7 @@ pub struct RenderSystem {
     pub default_white_texture_bind_group: Arc<BindGroup>,
     current_render_buffer: Option<RenderBuffer>,
     buffer_cache: HashMap<u32, RenderBuffer>,
+    collider_buffer_cache: HashMap<u32, RenderBuffer>,
     camera_buffer: Buffer,
     camera_bind_group: BindGroup,
 }
@@ -313,6 +318,7 @@ impl RenderSystem {
             render_pipeline,
             current_render_buffer: None,
             buffer_cache: HashMap::new(),
+            collider_buffer_cache: HashMap::new(),
             camera_buffer,
             camera_bind_group,
             texture_bind_group_layout,
@@ -470,10 +476,48 @@ impl RenderSystem {
         );
     }
 
+    pub fn setup_collider_buffers(
+        &mut self,
+        entity_id: usize,
+        collider: &Collider,
+        transform: &Transform,
+    ) {
+        let (verticles, indices) = match &collider.shape {
+            ColliderShape::Box { width, height } => {
+                let extents = Scale {
+                    x: width * transform.scale.x,
+                    y: height * transform.scale.y,
+                };
+                // Semi-transparent green color for debug boxes
+                let color = Color {
+                    r: 0.0,
+                    g: 255.0,
+                    b: 0.0,
+                    a: 0.1,
+                };
+                create_rectangle_verticles(extents, color, transform.position)
+            }
+            ColliderShape::Circle { radius } => {
+                todo!("Implement circle collider verticles")
+            }
+        };
+
+        self.collider_buffer_cache.insert(
+            entity_id as u32,
+            RenderBuffer {
+                vertex_buffer: Some(self.create_vertex_buffer(&verticles)),
+                index_buffer: Some(self.create_index_buffer(&indices)),
+                vertex_count: indices.len() as u32,
+                bind_group: self.default_white_texture_bind_group.clone(), // Use default texture
+            },
+        );
+    }
+
     pub fn draw(
         &mut self,
         transforms: &Vec<Option<Transform>>,
         renderables: &Vec<Option<Renderable>>,
+        colliders: &Vec<Option<Collider>>,
         camera_state: &CameraState,
     ) {
         // let camera = &camera_state.main_camera;
@@ -577,6 +621,58 @@ impl RenderSystem {
                     }
                 }
             }
+
+            // for (id, (transform_opt, collider_opt)) in
+            //     transforms.iter().zip(colliders.iter()).enumerate()
+            // {
+            //     if let (Some(transform), Some(collider)) = (transform_opt, collider_opt) {
+            //         if !self.collider_buffer_cache.contains_key(&(id as u32)) {
+            //             self.setup_collider_buffers(id, collider, transform);
+            //         } else {
+            //             let (verticles, _) = match &collider.shape {
+            //                 ColliderShape::Box { width, height } => {
+            //                     let extents = Scale {
+            //                         x: width * transform.scale.x,
+            //                         y: height * transform.scale.y,
+            //                     };
+            //                     let color = Color {
+            //                         r: 0.0,
+            //                         g: 255.0,
+            //                         b: 0.0,
+            //                         a: 0.1,
+            //                     };
+            //                     create_rectangle_verticles(extents, color, transform.position)
+            //                 },
+            //                 ColliderShape::Circle { radius } => {
+            //                     todo!("Implement circle collider verticles")
+            //                 }
+            //             };
+
+            //             let current_render_buffer =
+            //                 self.collider_buffer_cache.get(&(id as u32)).unwrap();
+            //             if let Some(vertex_buffer) = &current_render_buffer.vertex_buffer {
+            //                 self.queue.write_buffer(
+            //                     vertex_buffer,
+            //                     0,
+            //                     bytemuck::cast_slice(&verticles),
+            //                 );
+            //             }
+            //         }
+
+            //         let current_render_buffer =
+            //             self.collider_buffer_cache.get(&(id as u32)).unwrap();
+            //         if let (Some(vertex_buffer), Some(index_buffer)) = (
+            //             &current_render_buffer.vertex_buffer,
+            //             &current_render_buffer.index_buffer,
+            //         ) {
+            //             render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
+            //             render_pass
+            //                 .set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint16);
+            //             render_pass.set_bind_group(1, &*current_render_buffer.bind_group, &[]);
+            //             render_pass.draw_indexed(0..current_render_buffer.vertex_count, 0, 0..1);
+            //         }
+            //     }
+            // }
         }
 
         self.queue.submit(Some(encoder.finish()));
@@ -595,9 +691,10 @@ impl System for RenderSystem {
     fn update(&mut self, world: &mut WorldView) {
         let transforms = world.components.get_component::<Transform>();
         let renderables = world.components.get_component::<Renderable>();
+        let colliders = world.components.get_component::<Collider>();
 
         let camera_state = world.resources.get::<CameraState>().unwrap();
 
-        self.draw(&*transforms, &*renderables, &camera_state);
+        self.draw(&*transforms, &*renderables, &*colliders, &camera_state);
     }
 }

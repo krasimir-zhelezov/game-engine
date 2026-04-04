@@ -14,12 +14,12 @@ use winit::{
 
 use crate::{
     components::{
-        camera::Camera, component_store::ComponentStore, custom::player_controller::PlayerController, renderable::{Color, PrimitiveType, RenderType, Renderable}, tag::Tag, transform::{Position, Scale, Transform}, velocity::Velocity
+        camera::Camera, collider::{Collider, ColliderShape}, component_store::ComponentStore, custom::player_controller::PlayerController, renderable::{Color, PrimitiveType, RenderType, Renderable}, tag::Tag, transform::{Position, Scale, Transform}, velocity::Velocity
     },
     entities::entity_manager::EntityManager,
     resources::{asset_manager::{self, AssetManager}, resource_store::ResourceStore},
     systems::{
-        camera_system::{CameraState, CameraSystem}, custom::{player_movement_system::PlayerMovementSystem, stress_test_system::StressTestSystem}, input_system::{self, InputState, InputSystem}, render_system::RenderSystem, system::System, system_manager::SystemManager, velocity_system::VelocitySystem
+        camera_system::{CameraState, CameraSystem}, collision_system::CollisionSystem, custom::{player_movement_system::PlayerMovementSystem, stress_test_system::StressTestSystem}, input_system::{self, InputState, InputSystem}, render_system::RenderSystem, system::System, system_manager::SystemManager, velocity_system::VelocitySystem
     },
 };
 
@@ -73,6 +73,7 @@ impl World {
         world.systems.add_system(Box::new(pollster::block_on(RenderSystem::new(window))));
         world.systems.add_system(Box::new(InputSystem::new()));
         world.systems.add_system(Box::new(VelocitySystem::new()));
+        world.systems.add_system(Box::new(CollisionSystem::new()));
         // world.systems.add_system(Box::new(StressTestSystem::new(100)));
 
         let camera_id = world.entity_manager.create_entity();
@@ -94,19 +95,22 @@ impl World {
             player_id,
             Transform {
                 position: Position { x: 0.0, y: 0.0 },
-                scale: Scale { x: 1.0, y: 1.0 },
+                scale: Scale { x: 2.0, y: 2.0 },
                 rotation: 1.0,
             },
         );
         world.components.add_component(player_id, Renderable::new_texture(asset_manager.get_texture("player.png").unwrap()));
         world.components.add_component(player_id, PlayerController {
-            movement_speed: 1.0,
+            movement_speed: 0.5,
+        });
+        world.components.add_component(player_id, Collider {
+            shape: ColliderShape::Box { width: 1.0, height: 1.0 },
         });
         
         let entity1_id = world.entity_manager.create_entity();
         world.components.add_component::<Transform>(entity1_id, Transform {
             position: Position { x: 0.0, y: 0.0 },
-            scale: Scale { x: 1.0, y: 1.0 },
+            scale: Scale { x: 2.0, y: 2.0 },
             rotation: 1.0,
         });
         world.components.add_component::<Renderable>(entity1_id, Renderable::new_rectangle(
@@ -119,7 +123,10 @@ impl World {
             10.0, 
             10.0
         ));
-        world.components.add_component::<Velocity>(entity1_id, Velocity { x: 0.0, y: 0.1 });
+        // world.components.add_component::<Velocity>(entity1_id, Velocity { x: 0.0, y: 0.01 });
+        world.components.add_component(entity1_id, Collider {
+            shape: ColliderShape::Box { width: 1.0, height: 1.0 },
+        });
 
         world
     }
