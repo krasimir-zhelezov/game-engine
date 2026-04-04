@@ -17,7 +17,7 @@ use crate::{
         camera::Camera, collider::{Collider, ColliderShape}, component_store::ComponentStore, custom::player_controller::PlayerController, renderable::{Color, PrimitiveType, RenderType, Renderable}, tag::Tag, transform::{Position, Scale, Transform}, velocity::Velocity
     },
     entities::entity_manager::EntityManager,
-    resources::{asset_manager::{self, AssetManager}, resource_store::ResourceStore},
+    resources::{asset_manager::{self, AssetManager}, collision_events::{self, CollisionEvents}, resource_store::ResourceStore},
     systems::{
         camera_system::{CameraState, CameraSystem}, collision_system::CollisionSystem, custom::{player_movement_system::PlayerMovementSystem, stress_test_system::StressTestSystem}, input_system::{self, InputState, InputSystem}, render_system::RenderSystem, system::System, system_manager::SystemManager, velocity_system::VelocitySystem
     },
@@ -67,6 +67,7 @@ impl World {
 
         world.resources.insert(InputState::new());
         world.resources.insert(CameraState::new());
+        world.resources.insert(CollisionEvents::default());
 
         world.systems.add_system(Box::new(CameraSystem::new()));
         world.systems.add_system(Box::new(PlayerMovementSystem::new()));
@@ -146,9 +147,13 @@ impl World {
             self.fps_timer = Instant::now();
         }
 
-        let title = format!("Skalora 2D Game Engine | FPS: {} | Entities: {}", self.fps, self.entity_manager.entity_count);
+        let title = format!("Skalora 2D Game Engine | FPS: {} | Entities: {} | Collisions: {}", self.fps, self.entity_manager.entity_count, self.resources.get::<CollisionEvents>().unwrap().events.len());
 
         self.window.set_title(&title);
+
+        if let Some(collision_events) = self.resources.get_mut::<CollisionEvents>() {
+            collision_events.events.clear();
+        }
 
         //     // let entity = self.entities.get_entities_by_tag("Player", &self.components)[0];
 

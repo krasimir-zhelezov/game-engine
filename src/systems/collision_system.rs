@@ -2,9 +2,7 @@ use crate::{
     components::{
         collider::{Collider, ColliderShape},
         transform::{self, Transform},
-    },
-    systems::system::System,
-    world::WorldView,
+    }, resources::collision_events::{CollisionEvent, CollisionEvents}, systems::system::System, world::WorldView
 };
 
 pub struct CollisionSystem;
@@ -17,6 +15,8 @@ impl CollisionSystem {
 
 impl System for CollisionSystem {
     fn update(&mut self, world: &mut WorldView) {
+        let mut collision_events = world.resources.get_mut::<CollisionEvents>().unwrap();
+
         let transforms = world.components.get_component::<Transform>();
         let colliders = world.components.get_component::<Collider>();
 
@@ -63,10 +63,10 @@ impl System for CollisionSystem {
 
                     if left_a < right_b && right_a > left_b && top_a > bottom_b && bottom_a < top_b
                     {
-                        println!(
-                            "Collision detected between Entity {} and Entity {}",
-                            id_a, id_b
-                        );
+                        collision_events.events.push(CollisionEvent {
+                            entity_id_a: *id_a as u32,
+                            entity_id_b: *id_b as u32,
+                        });
                     }
                 } else {
                     todo!("Collision detection for non-box colliders not implemented yet");
