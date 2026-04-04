@@ -26,11 +26,11 @@
 ### Problems
 * Find a way to fix the empty spaces in vectors of systems/components
 * Sub-pixel distortion eg. "fat pixel"
-* Components of deleted entities are not deleted
 * When using texture it copies the image data multiple times
 * Refactor render system and component store
 * Warnings
 
+* ~~Components of deleted entities are not deleted~~
 *~~ Systems may crash if no entities with components is found~~
 * ~~Colors are not converted from 255 to 1.0 when rendered~~
 * ~~Texture loader will load the same texture 100 times if it's used 100 times~~
