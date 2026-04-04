@@ -115,13 +115,8 @@ impl World {
             rotation: 1.0,
         });
         world.components.add_component::<Renderable>(entity1_id, Renderable::new_rectangle(
-            Color {
-                r: 255.0,
-                g: 0.0,
-                b: 0.0,
-                a: 200.0,
-            }, 
-            10.0, 
+            Color::from_rgba8(255.0, 205.0, 30.0, 255.0),
+            10.0,
             10.0
         ));
         // world.components.add_component::<Velocity>(entity1_id, Velocity { x: 0.0, y: 0.01 });
