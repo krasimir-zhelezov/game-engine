@@ -1,7 +1,6 @@
 ### Features
 * Triangle Primitive
 * Renderable Rotation
-* Collider
 * Audio
 * Animation
 * UI
@@ -9,6 +8,7 @@
 * Debug Tools (Draw colliders)
 * Logging
 
+* ~~Collision System~~
 * ~~Assets Manager~~
 * ~~Transform Component~~
 * ~~Game Object / Entity~~
@@ -29,8 +29,8 @@
 * Components of deleted entities are not deleted
 * When using texture it copies the image data multiple times
 * Systems may crash if no entities with components is found
-* Colors are not converted from 255 to 1.0 when rendered
 
+* ~~Colors are not converted from 255 to 1.0 when rendered~~
 * ~~Texture loader will load the same texture 100 times if it's used 100 times~~
 * ~~Blurry textures~~
 * ~~Fix Primitive Circle~~
