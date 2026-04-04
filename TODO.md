@@ -29,6 +29,7 @@
 * Components of deleted entities are not deleted
 * When using texture it copies the image data multiple times
 * Refactor render system and component store
+* Warnings
 
 *~~ Systems may crash if no entities with components is found~~
 * ~~Colors are not converted from 255 to 1.0 when rendered~~
