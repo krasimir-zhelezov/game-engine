@@ -28,6 +28,7 @@
 * Sub-pixel distortion eg. "fat pixel"
 * Components of deleted entities are not deleted
 * When using texture it copies the image data multiple times
+* Systems may crash if no entities with components is found
 
 * ~~Texture loader will load the same texture 100 times if it's used 100 times~~
 * ~~Blurry textures~~
