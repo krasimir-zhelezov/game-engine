@@ -83,3 +83,76 @@ impl ComponentStore {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[derive(Debug, PartialEq, Clone)]
+    struct Position { x: f32, y: f32 }
+    impl Component for Position {}
+
+    #[derive(Debug, PartialEq, Clone)]
+    struct Health { current: i32 }
+    impl Component for Health {}
+
+    #[test]
+    fn test_component_store_remove_entity() {
+        let mut store = ComponentStore::new();
+        
+        store.register_component::<Position>();
+        store.register_component::<Health>();
+
+        let target_entity = 0;
+        let bystander_entity = 1;
+
+        store.add_component(target_entity, Position { x: 10.0, y: 20.0 });
+        store.add_component(target_entity, Health { current: 100 });
+
+        store.add_component(bystander_entity, Position { x: 50.0, y: 50.0 });
+        store.add_component(bystander_entity, Health { current: 50 });
+
+        {
+            let positions = store.get_component::<Position>();
+            assert!(positions[target_entity as usize].is_some(), "Target position should exist");
+            assert!(positions[bystander_entity as usize].is_some(), "Bystander position should exist");
+        }
+
+        store.remove_entity(target_entity);
+
+        {
+            let positions = store.get_component::<Position>();
+            let healths = store.get_component::<Health>();
+
+            assert_eq!(
+                positions[target_entity as usize], None, 
+                "Target's Position was not removed"
+            );
+            assert_eq!(
+                healths[target_entity as usize], None, 
+                "Target's Health was not removed"
+            );
+
+            assert_eq!(
+                positions[bystander_entity as usize], Some(Position { x: 50.0, y: 50.0 }), 
+                "Bystander's Position was modified unexpectedly!"
+            );
+            assert_eq!(
+                healths[bystander_entity as usize], Some(Health { current: 50 }), 
+                "Bystander's Health was modified unexpectedly!"
+            );
+        }
+    }
+
+    #[test]
+    fn test_remove_entity_out_of_bounds() {
+        let mut store = ComponentStore::new();
+        store.register_component::<Position>();
+        store.add_component(0, Position { x: 0.0, y: 0.0 });
+
+        store.remove_entity(999); 
+
+        let positions = store.get_component::<Position>();
+        assert!(positions[0].is_some(), "Entity 0 should be unaffected by an out-of-bounds removal");
+    }
+}
