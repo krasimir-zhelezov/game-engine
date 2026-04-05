@@ -107,7 +107,7 @@ impl World {
         );
         world.components.add_component(player_id, Renderable::new_texture(asset_manager.get_texture("player.png").unwrap()));
         world.components.add_component(player_id, PlayerController {
-            movement_speed: 0.5,
+            movement_speed: 0.2,
         });
         world.components.add_component(player_id, Collider {
             shape: ColliderShape::Box { width: 1.0, height: 1.0 },
