@@ -4,10 +4,10 @@
 * Audio
 * Animation
 * UI
-* Remove components
 * Debug Tools (Draw colliders)
 * Logging
 
+* ~~Remove components~~
 * ~~Collision System~~
 * ~~Assets Manager~~
 * ~~Transform Component~~
