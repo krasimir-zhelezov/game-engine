@@ -106,7 +106,7 @@ fn create_rectangle_verticles(
     color: Color,
     position: Position,
 ) -> (Vec<f32>, Vec<u16>) {
-    let hw = scale.x / 2.0; 
+    let hw = scale.x / 2.0;
     let hh = scale.y / 2.0;
 
     let verticles = vec![
@@ -440,11 +440,7 @@ impl RenderSystem {
                 // Primitives use the default white texture!
                 (v, i, self.default_white_texture_bind_group.clone())
             }
-            RenderType::Texture {
-                image_data,
-                width,
-                height,
-            } => {
+            RenderType::Texture { texture } => {
                 // Assuming your enum holds these
                 let (v, i) = create_rectangle_verticles(
                     transform.scale,
@@ -456,9 +452,9 @@ impl RenderSystem {
                     &self.device,
                     &self.queue,
                     &self.texture_bind_group_layout,
-                    image_data,
-                    *width,
-                    *height,
+                    &texture.image_data,
+                    texture.width,
+                    texture.height,
                 ));
 
                 (v, i, bind_group)
@@ -586,7 +582,7 @@ impl RenderSystem {
                                 ),
                                 PrimitiveType::Line => create_line_verticles(),
                             },
-                            RenderType::Texture { width, height, .. } => {
+                            RenderType::Texture { .. } => {
                                 create_rectangle_verticles(
                                     transform.scale,
                                     renderable.color,

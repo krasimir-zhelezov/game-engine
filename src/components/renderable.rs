@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::{path::Path, sync::Arc};
 
 use wgpu::Buffer;
 
@@ -50,9 +50,7 @@ pub enum RenderType {
         parameters: [f32; 4],
     },
     Texture {
-        image_data: Vec<u8>,
-        width: u32,
-        height: u32,
+        texture: Arc<Texture>
     }
 }
 
@@ -86,12 +84,10 @@ impl Renderable {
         Self::new_primitive(PrimitiveType::Line, color, [start[0], start[1], end[0], end[1]])
     }
 
-    pub fn new_texture(texture: &Texture) -> Self {
+    pub fn new_texture(texture: Arc<Texture>) -> Self {
         Self {
             render_type: RenderType::Texture {
-                image_data: texture.image_data.clone(),
-                width: texture.width,
-                height: texture.height,
+                texture
             },
             color: Color::WHITE, 
             visible: true,

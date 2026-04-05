@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 
 pub struct Texture {
     pub image_data: Vec<u8>,
@@ -7,7 +7,7 @@ pub struct Texture {
 }
 
 pub struct AssetManager {
-    textures: HashMap<String, Texture>,
+    textures: HashMap<String, Arc<Texture>>,
 }
 
 impl AssetManager {
@@ -26,11 +26,12 @@ impl AssetManager {
         let image_data = rgba_image.into_raw();
 
         if !self.textures.contains_key(name) {
-            let texture = Texture {
+            let texture = Arc::new(Texture {
                 image_data,
                 width,
                 height,
-            };
+            });
+            
             self.textures.insert(name.to_string(), texture);
         }
         self.textures.get(name).unwrap()
@@ -56,7 +57,7 @@ impl AssetManager {
         }
     }
 
-    pub fn get_texture(&self, name: &str) -> Option<&Texture> {
-        self.textures.get(name)
+    pub fn get_texture(&self, name: &str) -> Option<Arc<Texture>> {
+        self.textures.get(name).cloned()
     }
 }
