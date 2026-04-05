@@ -105,43 +105,30 @@ fn create_rectangle_verticles(
     scale: Scale,
     color: Color,
     position: Position,
+    rotation: f32,
 ) -> (Vec<f32>, Vec<u16>) {
     let hw = scale.x / 2.0;
     let hh = scale.y / 2.0;
 
+    let cos_r = rotation.cos();
+    let sin_r = rotation.sin();
+
+    let transform_point = |lx: f32, ly: f32| -> (f32, f32) {
+        let rx = lx * cos_r - ly * sin_r;
+        let ry = lx * sin_r + ly * cos_r;
+        (position.x + rx, position.y + ry)
+    };
+
+    let (bl_x, bl_y) = transform_point(-hw, -hh);
+    let (br_x, br_y) = transform_point(hw, -hh);
+    let (tr_x, tr_y) = transform_point(hw, hh);
+    let (tl_x, tl_y) = transform_point(-hw, hh);
+
     let verticles = vec![
-        position.x - hw,
-        position.y - hh,
-        color.r,
-        color.g,
-        color.b,
-        color.a,
-        0.0,
-        1.0,
-        position.x + hw,
-        position.y - hh,
-        color.r,
-        color.g,
-        color.b,
-        color.a,
-        1.0,
-        1.0,
-        position.x + hw,
-        position.y + hh,
-        color.r,
-        color.g,
-        color.b,
-        color.a,
-        1.0,
-        0.0,
-        position.x - hw,
-        position.y + hh,
-        color.r,
-        color.g,
-        color.b,
-        color.a,
-        0.0,
-        0.0,
+        bl_x, bl_y, color.r, color.g, color.b, color.a, 0.0, 1.0,
+        br_x, br_y, color.r, color.g, color.b, color.a, 1.0, 1.0,
+        tr_x, tr_y, color.r, color.g, color.b, color.a, 1.0, 0.0,
+        tl_x, tl_y, color.r, color.g, color.b, color.a, 0.0, 0.0,
     ];
 
     let indices = vec![0, 1, 2, 0, 2, 3];
@@ -433,6 +420,7 @@ impl RenderSystem {
                         transform.scale,
                         renderable.color,
                         transform.position,
+                        transform.rotation
                     ),
                     // ... handle circle/line ...
                     _ => create_line_verticles(),
@@ -446,6 +434,7 @@ impl RenderSystem {
                     transform.scale,
                     renderable.color,
                     transform.position,
+                    transform.rotation
                 );
 
                 let bind_group = Arc::new(RenderSystem::create_texture_bind_group_from_bytes(
@@ -491,7 +480,7 @@ impl RenderSystem {
                     b: 0.0,
                     a: 0.1,
                 };
-                create_rectangle_verticles(extents, color, transform.position)
+                create_rectangle_verticles(extents, color, transform.position, transform.rotation)
             }
             ColliderShape::Circle { radius } => {
                 todo!("Implement circle collider verticles")
@@ -573,6 +562,7 @@ impl RenderSystem {
                                     transform.scale,
                                     renderable.color,
                                     transform.position,
+                                    transform.rotation
                                 ),
                                 PrimitiveType::Circle => create_circle_verticles(
                                     16,
@@ -587,6 +577,7 @@ impl RenderSystem {
                                     transform.scale,
                                     renderable.color,
                                     transform.position,
+                                    transform.rotation
                                 )
                             }
                         };
@@ -618,57 +609,57 @@ impl RenderSystem {
                 }
             }
 
-            // for (id, (transform_opt, collider_opt)) in
-            //     transforms.iter().zip(colliders.iter()).enumerate()
-            // {
-            //     if let (Some(transform), Some(collider)) = (transform_opt, collider_opt) {
-            //         if !self.collider_buffer_cache.contains_key(&(id as u32)) {
-            //             self.setup_collider_buffers(id, collider, transform);
-            //         } else {
-            //             let (verticles, _) = match &collider.shape {
-            //                 ColliderShape::Box { width, height } => {
-            //                     let extents = Scale {
-            //                         x: width * transform.scale.x,
-            //                         y: height * transform.scale.y,
-            //                     };
-            //                     let color = Color {
-            //                         r: 0.0,
-            //                         g: 255.0,
-            //                         b: 0.0,
-            //                         a: 0.1,
-            //                     };
-            //                     create_rectangle_verticles(extents, color, transform.position)
-            //                 },
-            //                 ColliderShape::Circle { radius } => {
-            //                     todo!("Implement circle collider verticles")
-            //                 }
-            //             };
+            for (id, (transform_opt, collider_opt)) in
+                transforms.iter().zip(colliders.iter()).enumerate()
+            {
+                if let (Some(transform), Some(collider)) = (transform_opt, collider_opt) {
+                    if !self.collider_buffer_cache.contains_key(&(id as u32)) {
+                        self.setup_collider_buffers(id, collider, transform);
+                    } else {
+                        let (verticles, _) = match &collider.shape {
+                            ColliderShape::Box { width, height } => {
+                                let extents = Scale {
+                                    x: width * transform.scale.x,
+                                    y: height * transform.scale.y,
+                                };
+                                let color = Color {
+                                    r: 0.0,
+                                    g: 255.0,
+                                    b: 0.0,
+                                    a: 0.1,
+                                };
+                                create_rectangle_verticles(extents, color, transform.position, transform.rotation)
+                            },
+                            ColliderShape::Circle { radius } => {
+                                todo!("Implement circle collider verticles")
+                            }
+                        };
 
-            //             let current_render_buffer =
-            //                 self.collider_buffer_cache.get(&(id as u32)).unwrap();
-            //             if let Some(vertex_buffer) = &current_render_buffer.vertex_buffer {
-            //                 self.queue.write_buffer(
-            //                     vertex_buffer,
-            //                     0,
-            //                     bytemuck::cast_slice(&verticles),
-            //                 );
-            //             }
-            //         }
+                        let current_render_buffer =
+                            self.collider_buffer_cache.get(&(id as u32)).unwrap();
+                        if let Some(vertex_buffer) = &current_render_buffer.vertex_buffer {
+                            self.queue.write_buffer(
+                                vertex_buffer,
+                                0,
+                                bytemuck::cast_slice(&verticles),
+                            );
+                        }
+                    }
 
-            //         let current_render_buffer =
-            //             self.collider_buffer_cache.get(&(id as u32)).unwrap();
-            //         if let (Some(vertex_buffer), Some(index_buffer)) = (
-            //             &current_render_buffer.vertex_buffer,
-            //             &current_render_buffer.index_buffer,
-            //         ) {
-            //             render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
-            //             render_pass
-            //                 .set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint16);
-            //             render_pass.set_bind_group(1, &*current_render_buffer.bind_group, &[]);
-            //             render_pass.draw_indexed(0..current_render_buffer.vertex_count, 0, 0..1);
-            //         }
-            //     }
-            // }
+                    let current_render_buffer =
+                        self.collider_buffer_cache.get(&(id as u32)).unwrap();
+                    if let (Some(vertex_buffer), Some(index_buffer)) = (
+                        &current_render_buffer.vertex_buffer,
+                        &current_render_buffer.index_buffer,
+                    ) {
+                        render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
+                        render_pass
+                            .set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint16);
+                        render_pass.set_bind_group(1, &*current_render_buffer.bind_group, &[]);
+                        render_pass.draw_indexed(0..current_render_buffer.vertex_count, 0, 0..1);
+                    }
+                }
+            }
         }
 
         self.queue.submit(Some(encoder.finish()));

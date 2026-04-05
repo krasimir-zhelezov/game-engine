@@ -1,8 +1,5 @@
 use std::{
-    any::{Any, TypeId},
-    collections::HashMap,
-    sync::Arc,
-    time::{Duration, Instant},
+    any::{Any, TypeId}, collections::HashMap, f32::consts::PI, sync::Arc, time::{Duration, Instant}
 };
 
 use wgpu::naga::Type;
@@ -105,7 +102,7 @@ impl World {
             Transform {
                 position: Position { x: 0.0, y: 0.0 },
                 scale: Scale { x: 2.0, y: 2.0 },
-                rotation: 1.0,
+                rotation: 0.0,
             },
         );
         world.components.add_component(player_id, Renderable::new_texture(asset_manager.get_texture("player.png").unwrap()));
@@ -120,7 +117,7 @@ impl World {
         world.components.add_component::<Transform>(entity1_id, Transform {
             position: Position { x: 0.0, y: 0.0 },
             scale: Scale { x: 2.0, y: 2.0 },
-            rotation: 1.0,
+            rotation: PI / 4.5,
         });
         world.components.add_component::<Renderable>(entity1_id, Renderable::new_rectangle(
             Color::from_rgba8(255.0, 205.0, 30.0, 255.0),
