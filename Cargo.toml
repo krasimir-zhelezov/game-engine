@@ -1,7 +1,12 @@
 [package]
-name = "game-engine-2d"
+name = "skalora-game-engine"
 version = "0.1.0"
 edition = "2024"
+authors = ["Krasimir Zhelezov"]
+description = "A custom lightweight game engine"
+repository = "https://github.com/krasimir-zhelezov/game-engine"
+license = ""
+readme = "README.md"
 
 [dependencies]
 bytemuck = "1.23.2"

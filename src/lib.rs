@@ -1,10 +1,10 @@
-mod app;
-mod application_handler;
-mod world;
-mod systems;
-mod resources;
-mod entities;
-mod components;
+pub mod app;
+pub mod application_handler;
+pub mod world;
+pub mod systems;
+pub mod resources;
+pub mod entities;
+pub mod components;
 
 use winit::{error::EventLoopError, event_loop::EventLoop};
 

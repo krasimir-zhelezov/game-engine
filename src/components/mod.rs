@@ -5,5 +5,4 @@ pub mod renderable;
 pub mod camera;
 pub mod component;
 pub mod velocity;
-pub mod custom;
 pub mod collider;

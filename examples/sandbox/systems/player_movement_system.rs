@@ -1,13 +1,7 @@
+use skalora_game_engine::{components::transform::Transform, systems::{input_system::InputState, system::System}, world::WorldView};
 use winit::keyboard::KeyCode;
 
-use crate::{
-    components::{
-        custom::player_controller::{self, PlayerController},
-        tag::Tag,
-        transform::Transform,
-    },
-    systems::{input_system::InputState, system::System},
-};
+use crate::components::player_controller::PlayerController;
 
 pub struct PlayerMovementSystem;
 
@@ -18,7 +12,7 @@ impl PlayerMovementSystem {
 }
 
 impl System for PlayerMovementSystem {
-    fn update(&mut self, world: &mut crate::world::WorldView) {
+    fn update(&mut self, world: &mut WorldView) {
         let input = world
             .resources
             .get::<InputState>()
