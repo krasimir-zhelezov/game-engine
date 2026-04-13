@@ -1,5 +1,4 @@
 use crate::{components::{renderable::{Color, Renderable}, transform::{Position, Scale, Transform}}, systems::system::System, world::WorldView};
-use rand::Rng;
 use rand::prelude::*;
 
 pub struct StressTestSystem {

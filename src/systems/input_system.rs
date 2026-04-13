@@ -1,8 +1,8 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashSet};
 
-use winit::{event::{ElementState, KeyEvent, MouseButton}, keyboard::{Key, PhysicalKey}};
+use winit::{event::{ElementState, KeyEvent, MouseButton}, keyboard::{PhysicalKey}};
 
-use crate::{systems::system::System, world::{World, WorldView}};
+use crate::{systems::system::System, world::{WorldView}};
 use winit::keyboard::KeyCode;
 
 pub struct InputState {

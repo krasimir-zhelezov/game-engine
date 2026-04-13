@@ -1,7 +1,7 @@
 use crate::{
     components::{
         collider::{Collider, ColliderShape},
-        transform::{self, Transform},
+        transform::{Transform},
     }, resources::collision_events::{CollisionEvent, CollisionEvents}, systems::system::System, world::WorldView
 };
 
@@ -15,7 +15,7 @@ impl CollisionSystem {
 
 impl System for CollisionSystem {
     fn update(&mut self, world: &mut WorldView) {
-        let mut collision_events = world.resources.get_mut::<CollisionEvents>().unwrap();
+        let collision_events = world.resources.get_mut::<CollisionEvents>().unwrap();
 
         let transforms = world.components.get_component::<Transform>();
         let colliders = world.components.get_component::<Collider>();

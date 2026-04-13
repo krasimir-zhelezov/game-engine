@@ -1,6 +1,4 @@
-use std::{sync::Arc, time::{Duration, Instant}};
-
-use winit::{event_loop::EventLoop, window::Window};
+use winit::{event_loop::EventLoop};
 
 use crate::{world::World};
 
@@ -16,7 +14,6 @@ impl App {
     }
 
     pub fn run(&mut self) {
-        // let event_loop = EventLoop::with_user_event().build().unwrap();
         let event_loop = EventLoop::new().unwrap();
 
         event_loop.run_app(self).unwrap();

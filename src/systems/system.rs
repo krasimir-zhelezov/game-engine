@@ -1,9 +1,9 @@
 use std::any::Any;
 
-use crate::world::{World, WorldView};
+use crate::world::{WorldView};
 
 pub trait System: Any {
-    fn update(&mut self, world: &mut WorldView) {}
+    fn update(&mut self, _world: &mut WorldView) {}
 }
 
 impl dyn System {

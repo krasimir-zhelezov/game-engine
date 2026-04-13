@@ -1,12 +1,10 @@
 use std::{
     any::{Any, TypeId},
-    boxed,
     cell::{Ref, RefCell, RefMut},
     collections::HashMap,
-    hash::Hash,
 };
 
-use crate::components::{component::Component, tag::Tag};
+use crate::components::{component::Component};
 
 pub trait ComponentVec {
     fn remove_entity(&mut self, entity_id: usize);

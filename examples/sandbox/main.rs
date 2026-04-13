@@ -3,10 +3,8 @@ mod systems;
 
 use skalora_game_engine::app::App;
 use skalora_game_engine::components::camera::Camera;
-use skalora_game_engine::components::renderable::{Color, RenderType, Renderable};
+use skalora_game_engine::components::renderable::{Color, Renderable};
 use skalora_game_engine::components::transform::{Position, Scale, Transform};
-use skalora_game_engine::world::World;
-use winit::{error::EventLoopError, event_loop::EventLoop};
 
 use crate::components::player_controller::PlayerController;
 use crate::systems::player_movement_system::PlayerMovementSystem;

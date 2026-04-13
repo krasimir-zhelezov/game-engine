@@ -60,6 +60,7 @@ impl World {
         
         let asset_manager = AssetManager::new();
 
+        world.resources.insert(asset_manager);
         world.resources.insert(InputState::new());
         world.resources.insert(CameraState::new());
         world.resources.insert(CollisionEvents::default());

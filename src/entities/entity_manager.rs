@@ -1,7 +1,3 @@
-use crate::{
-    components::{component_store::ComponentStore, tag::Tag},
-};
-
 pub struct EntityManager {
     next_id: u32,
     free_ids: Vec<u32>,

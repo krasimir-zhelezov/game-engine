@@ -13,7 +13,7 @@ use wgpu::{
 use winit::{dpi::PhysicalSize, window::Window};
 
 use crate::components::collider::{Collider, ColliderShape};
-use crate::components::renderable::{self, Color, PrimitiveType, RenderType, Renderable};
+use crate::components::renderable::{Color, PrimitiveType, RenderType, Renderable};
 use crate::components::transform::{Position, Scale, Transform};
 use crate::systems::camera_system::CameraState;
 use crate::systems::system::System;
@@ -186,7 +186,6 @@ pub struct RenderSystem {
     pub render_pipeline: RenderPipeline,
     pub texture_bind_group_layout: BindGroupLayout,
     pub default_white_texture_bind_group: Arc<BindGroup>,
-    current_render_buffer: Option<RenderBuffer>,
     buffer_cache: HashMap<u32, RenderBuffer>,
     collider_buffer_cache: HashMap<u32, RenderBuffer>,
     camera_buffer: Buffer,
@@ -303,7 +302,6 @@ impl RenderSystem {
             surface_configuration,
             queue,
             render_pipeline,
-            current_render_buffer: None,
             buffer_cache: HashMap::new(),
             collider_buffer_cache: HashMap::new(),
             camera_buffer,
@@ -482,7 +480,7 @@ impl RenderSystem {
                 };
                 create_rectangle_verticles(extents, color, transform.position, transform.rotation)
             }
-            ColliderShape::Circle { radius } => {
+            ColliderShape::Circle { radius: _ } => {
                 todo!("Implement circle collider verticles")
             }
         };
@@ -556,7 +554,7 @@ impl RenderSystem {
                         let (verticles, _) = match &renderable.render_type {
                             RenderType::Primitive {
                                 primitive_type,
-                                parameters,
+                                ..
                             } => match primitive_type {
                                 PrimitiveType::Rectangle => create_rectangle_verticles(
                                     transform.scale,
@@ -630,7 +628,7 @@ impl RenderSystem {
                                 };
                                 create_rectangle_verticles(extents, color, transform.position, transform.rotation)
                             },
-                            ColliderShape::Circle { radius } => {
+                            ColliderShape::Circle { radius: _ } => {
                                 todo!("Implement circle collider verticles")
                             }
                         };

@@ -1,6 +1,4 @@
-use std::{path::Path, sync::Arc};
-
-use wgpu::Buffer;
+use std::{sync::Arc};
 
 use crate::{components::component::Component, resources::asset_manager::Texture};
 
@@ -11,6 +9,7 @@ pub enum PrimitiveType {
 }
 
 impl PrimitiveType {
+    #[allow(dead_code)]
     fn topology(&self) -> wgpu::PrimitiveTopology {
         match self {
             PrimitiveType::Rectangle => wgpu::PrimitiveTopology::TriangleList,

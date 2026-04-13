@@ -6,10 +6,10 @@ use std::{
 use winit::{
     application::ApplicationHandler,
     event::WindowEvent,
-    window::{self, Fullscreen, Window},
+    window::{self, Window},
 };
 
-use crate::{app::App, world::World};
+use crate::{app::App};
 
 const FPS: u32 = 60;
 const FRAME_DURATION: std::time::Duration = Duration::from_nanos(1_000_000_000 / FPS as u64);
@@ -59,23 +59,20 @@ impl ApplicationHandler for App {
                 }
             }
             WindowEvent::KeyboardInput {
-                device_id,
+                device_id: _,
                 event,
-                is_synthetic,
+                is_synthetic: _,
             } => {
                 self.world.handle_keyboard_input(&event);
             }
             WindowEvent::MouseInput {
-                device_id,
+                device_id: _,
                 state,
                 button,
             } => {
-                println!("Mouse button event: {:?}", button);
-            }
-            WindowEvent::Resized(new_size) => {}
-            WindowEvent::MouseInput { state, button, .. } => {
                 self.world.handle_mouse_button(state, button);
             }
+            WindowEvent::Resized(_new_size) => {}
             WindowEvent::CursorMoved { position, .. } => {
                 self.world.handle_cursor_moved(position);
             }

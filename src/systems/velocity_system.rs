@@ -14,7 +14,7 @@ impl System for VelocitySystem {
         let mut transforms = world.components.get_component_mut::<Transform>();
         let velocities = world.components.get_component::<Velocity>();
     
-        for (id, (transform_opt, velocity_opt)) in transforms.iter_mut().zip(velocities.iter()).enumerate() {
+        for (transform_opt, velocity_opt) in transforms.iter_mut().zip(velocities.iter()) {
             if let (Some(transform), Some(velocity)) = (transform_opt, velocity_opt) {
                 transform.position.x += velocity.x;
                 transform.position.y += velocity.y;
