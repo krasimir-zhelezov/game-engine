@@ -5,4 +5,3 @@ pub mod render_system;
 pub mod camera_system;
 pub mod velocity_system;
 pub mod collision_system;
-pub mod custom;

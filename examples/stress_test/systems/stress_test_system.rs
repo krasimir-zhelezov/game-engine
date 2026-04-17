@@ -1,5 +1,5 @@
-use crate::{components::{renderable::{Color, Renderable}, transform::{Position, Scale, Transform}}, systems::system::System, world::WorldView};
 use rand::prelude::*;
+use skalora_game_engine::{components::{collider::{Collider, ColliderShape}, renderable::{Color, Renderable}, transform::{Position, Scale, Transform}}, systems::system::System, world::WorldView};
 
 pub struct StressTestSystem {
     pub spawn_rate_per_frame: u32,
@@ -33,13 +33,11 @@ impl System for StressTestSystem {
                 scale: Scale { x: 1.0, y: 1.0 },
                 rotation: 0.0,
             });
+            world.components.add_component(id, Collider {
+                shape: ColliderShape::Box { width: 1.0, height: 1.0 }
+            });
             world.components.add_component(id, Renderable::new_rectangle(
-                Color {
-                    r: rng.random_range(0..255) as f32,
-                    g: rng.random_range(0..255) as f32,
-                    b: rng.random_range(0..255) as f32,
-                    a: 255.0,
-                },
+                Color::from_rgba8(rng.random_range(0..255) as f32, rng.random_range(0..255) as f32, rng.random_range(0..255) as f32, rng.random_range(0..255) as f32),
                 5.0,
                 5.0
             ));
