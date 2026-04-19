@@ -1,7 +1,7 @@
 use skalora_game_engine::{components::transform::Transform, systems::{input_system::InputState, system::System}, world::WorldView};
 use winit::keyboard::KeyCode;
 
-use crate::components::player_controller::PlayerController;
+use crate::player_controller::PlayerController;
 
 pub struct PlayerMovementSystem;
 

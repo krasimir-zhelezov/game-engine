@@ -1,23 +1,16 @@
-mod components;
-mod systems;
+mod player_controller;
+mod player_movement_system;
 
-use skalora_game_engine::app::App;
-use skalora_game_engine::components::camera::Camera;
-use skalora_game_engine::components::renderable::{Color, Renderable};
-use skalora_game_engine::components::transform::{Position, Scale, Transform};
+use skalora_game_engine::{app::App, components::{camera::Camera, renderable::{Color, Renderable}, transform::{Position, Scale, Transform}}};
 
-use crate::components::player_controller::PlayerController;
-use crate::systems::player_movement_system::PlayerMovementSystem;
+use crate::{player_controller::PlayerController, player_movement_system::PlayerMovementSystem};
 
 fn main() {
     let mut app = App::new();
 
-    app.world
-        .components
-        .register_component::<PlayerController>();
-    app.world
-        .systems
-        .add_system(Box::new(PlayerMovementSystem::new()));
+    app.world.components.register_component::<PlayerController>();
+
+    app.world.systems.add_system(Box::new(PlayerMovementSystem::new()));
 
     let camera_id = app.world.entity_manager.create_entity();
     app.world.components.add_component(
