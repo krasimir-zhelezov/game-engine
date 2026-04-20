@@ -145,13 +145,13 @@ fn create_circle_verticles(
     let mut verticles = Vec::new();
     let mut indices = Vec::new();
 
-    verticles.extend_from_slice(&[position.x, position.y, color.r, color.g, color.b, color.a]);
+    verticles.extend_from_slice(&[position.x, position.y, color.r, color.g, color.b, color.a, 0.0, 0.0]);
 
     for i in 0..=segments {
         let angle = 2.0 * PI * (i as f32) / (segments as f32);
         let x = position.x + (angle.cos() * scale.x);
         let y = position.y + (angle.sin() * scale.y);
-        verticles.extend_from_slice(&[x, y, color.r, color.g, color.b, color.a]);
+        verticles.extend_from_slice(&[x, y, color.r, color.g, color.b, color.a, 0.0, 0.0]);
 
         if i < segments {
             indices.extend_from_slice(&[0, i + 1, (i + 1) % segments + 1]);
@@ -420,7 +420,7 @@ impl RenderSystem {
                         transform.position,
                         transform.rotation
                     ),
-                    // ... handle circle/line ...
+                    PrimitiveType::Circle => create_circle_verticles(16, transform.scale, renderable.color, transform.position),
                     _ => create_line_verticles(),
                 };
                 // Primitives use the default white texture!
