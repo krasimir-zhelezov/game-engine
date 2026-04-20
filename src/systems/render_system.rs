@@ -125,10 +125,9 @@ fn create_rectangle_verticles(
     let (tl_x, tl_y) = transform_point(-hw, hh);
 
     let verticles = vec![
-        bl_x, bl_y, color.r, color.g, color.b, color.a, 0.0, 1.0,
-        br_x, br_y, color.r, color.g, color.b, color.a, 1.0, 1.0,
-        tr_x, tr_y, color.r, color.g, color.b, color.a, 1.0, 0.0,
-        tl_x, tl_y, color.r, color.g, color.b, color.a, 0.0, 0.0,
+        bl_x, bl_y, color.r, color.g, color.b, color.a, 0.0, 1.0, br_x, br_y, color.r, color.g,
+        color.b, color.a, 1.0, 1.0, tr_x, tr_y, color.r, color.g, color.b, color.a, 1.0, 0.0, tl_x,
+        tl_y, color.r, color.g, color.b, color.a, 0.0, 0.0,
     ];
 
     let indices = vec![0, 1, 2, 0, 2, 3];
@@ -145,7 +144,9 @@ fn create_circle_verticles(
     let mut verticles = Vec::new();
     let mut indices = Vec::new();
 
-    verticles.extend_from_slice(&[position.x, position.y, color.r, color.g, color.b, color.a, 0.0, 0.0]);
+    verticles.extend_from_slice(&[
+        position.x, position.y, color.r, color.g, color.b, color.a, 0.0, 0.0,
+    ]);
 
     for i in 0..=segments {
         let angle = 2.0 * PI * (i as f32) / (segments as f32);
@@ -418,9 +419,14 @@ impl RenderSystem {
                         transform.scale,
                         renderable.color,
                         transform.position,
-                        transform.rotation
+                        transform.rotation,
                     ),
-                    PrimitiveType::Circle => create_circle_verticles(16, transform.scale, renderable.color, transform.position),
+                    PrimitiveType::Circle => create_circle_verticles(
+                        16,
+                        transform.scale,
+                        renderable.color,
+                        transform.position,
+                    ),
                     _ => create_line_verticles(),
                 };
                 // Primitives use the default white texture!
@@ -432,7 +438,7 @@ impl RenderSystem {
                     transform.scale,
                     renderable.color,
                     transform.position,
-                    transform.rotation
+                    transform.rotation,
                 );
 
                 let bind_group = Arc::new(RenderSystem::create_texture_bind_group_from_bytes(
@@ -480,9 +486,20 @@ impl RenderSystem {
                 };
                 create_rectangle_verticles(extents, color, transform.position, transform.rotation)
             }
-            ColliderShape::Circle { radius: _ } => {
-                todo!("Implement circle collider verticles")
-            }
+            ColliderShape::Circle { radius } => create_circle_verticles(
+                16,
+                Scale {
+                    x: radius * transform.scale.x,
+                    y: radius * transform.scale.y,
+                },
+                Color {
+                    r: 0.0,
+                    g: 1.0,
+                    b: 0.0,
+                    a: 0.1,
+                },
+                transform.position,
+            ),
         };
 
         self.collider_buffer_cache.insert(
@@ -552,15 +569,12 @@ impl RenderSystem {
                         self.setup_primitive_buffers(id, renderable, transform);
                     } else {
                         let (verticles, _) = match &renderable.render_type {
-                            RenderType::Primitive {
-                                primitive_type,
-                                ..
-                            } => match primitive_type {
+                            RenderType::Primitive { primitive_type, .. } => match primitive_type {
                                 PrimitiveType::Rectangle => create_rectangle_verticles(
                                     transform.scale,
                                     renderable.color,
                                     transform.position,
-                                    transform.rotation
+                                    transform.rotation,
                                 ),
                                 PrimitiveType::Circle => create_circle_verticles(
                                     16,
@@ -570,14 +584,12 @@ impl RenderSystem {
                                 ),
                                 PrimitiveType::Line => create_line_verticles(),
                             },
-                            RenderType::Texture { .. } => {
-                                create_rectangle_verticles(
-                                    transform.scale,
-                                    renderable.color,
-                                    transform.position,
-                                    transform.rotation
-                                )
-                            }
+                            RenderType::Texture { .. } => create_rectangle_verticles(
+                                transform.scale,
+                                renderable.color,
+                                transform.position,
+                                transform.rotation,
+                            ),
                         };
 
                         let current_render_buffer = self.buffer_cache.get(&(id as u32)).unwrap();
@@ -626,11 +638,27 @@ impl RenderSystem {
                                     b: 0.0,
                                     a: 0.1,
                                 };
-                                create_rectangle_verticles(extents, color, transform.position, transform.rotation)
-                            },
-                            ColliderShape::Circle { radius: _ } => {
-                                todo!("Implement circle collider verticles")
+                                create_rectangle_verticles(
+                                    extents,
+                                    color,
+                                    transform.position,
+                                    transform.rotation,
+                                )
                             }
+                            ColliderShape::Circle { radius } => create_circle_verticles(
+                                16,
+                                Scale {
+                                    x: radius * transform.scale.x,
+                                    y: radius * transform.scale.y,
+                                },
+                                Color {
+                                    r: 0.0,
+                                    g: 1.0,
+                                    b: 0.0,
+                                    a: 0.1,
+                                },
+                                transform.position,
+                            ),
                         };
 
                         let current_render_buffer =
