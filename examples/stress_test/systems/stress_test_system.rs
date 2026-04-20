@@ -37,9 +37,7 @@ impl System for StressTestSystem {
                 shape: ColliderShape::Box { width: 1.0, height: 1.0 }
             });
             world.components.add_component(id, Renderable::new_rectangle(
-                Color::from_rgba8(rng.random_range(0..255) as f32, rng.random_range(0..255) as f32, rng.random_range(0..255) as f32, rng.random_range(0..255) as f32),
-                5.0,
-                5.0
+                Color::from_rgba8(rng.random_range(0..255) as f32, rng.random_range(0..255) as f32, rng.random_range(0..255) as f32, rng.random_range(0..255) as f32)
             ));
         }
     }

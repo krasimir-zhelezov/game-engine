@@ -137,6 +137,7 @@ fn create_rectangle_verticles(
 
 fn create_circle_verticles(
     segments: u16,
+    radius: f32,
     scale: Scale,
     color: Color,
     position: Position,
@@ -148,15 +149,15 @@ fn create_circle_verticles(
         position.x, position.y, color.r, color.g, color.b, color.a, 0.0, 0.0,
     ]);
 
-    for i in 0..=segments {
+    for i in 0..segments {
         let angle = 2.0 * PI * (i as f32) / (segments as f32);
-        let x = position.x + (angle.cos() * scale.x);
-        let y = position.y + (angle.sin() * scale.y);
+
+        let x = position.x + (angle.cos() * radius * scale.x);
+        let y = position.y + (angle.sin() * radius * scale.y);
+
         verticles.extend_from_slice(&[x, y, color.r, color.g, color.b, color.a, 0.0, 0.0]);
 
-        if i < segments {
-            indices.extend_from_slice(&[0, i + 1, (i + 1) % segments + 1]);
-        }
+        indices.extend_from_slice(&[0, i + 1, (i + 1) % segments + 1]);
     }
 
     (verticles, indices)
@@ -423,6 +424,7 @@ impl RenderSystem {
                     ),
                     PrimitiveType::Circle => create_circle_verticles(
                         16,
+                        1.0,
                         transform.scale,
                         renderable.color,
                         transform.position,
@@ -488,10 +490,8 @@ impl RenderSystem {
             }
             ColliderShape::Circle { radius } => create_circle_verticles(
                 16,
-                Scale {
-                    x: radius * transform.scale.x,
-                    y: radius * transform.scale.y,
-                },
+                *radius,
+                transform.scale,
                 Color {
                     r: 0.0,
                     g: 1.0,
@@ -578,6 +578,7 @@ impl RenderSystem {
                                 ),
                                 PrimitiveType::Circle => create_circle_verticles(
                                     16,
+                                    1.0,
                                     transform.scale,
                                     renderable.color,
                                     transform.position,
@@ -647,10 +648,8 @@ impl RenderSystem {
                             }
                             ColliderShape::Circle { radius } => create_circle_verticles(
                                 16,
-                                Scale {
-                                    x: radius * transform.scale.x,
-                                    y: radius * transform.scale.y,
-                                },
+                                *radius,
+                                transform.scale,
                                 Color {
                                     r: 0.0,
                                     g: 1.0,

@@ -45,8 +45,7 @@ impl Color {
 
 pub enum RenderType {
     Primitive {
-        primitive_type: PrimitiveType,
-        parameters: [f32; 4],
+        primitive_type: PrimitiveType
     },
     Texture {
         texture: Arc<Texture>
@@ -60,27 +59,26 @@ pub struct Renderable {
 }
 
 impl Renderable {
-    pub fn new_primitive(primitive_type: PrimitiveType, color: Color, parameters: [f32; 4]) -> Self {
+    pub fn new_primitive(primitive_type: PrimitiveType, color: Color) -> Self {
         Self {
             render_type: RenderType::Primitive {
                 primitive_type,
-                parameters,
             },
             visible: true,
             color,
         }
     }
 
-    pub fn new_rectangle(color: Color, width: f32, height: f32) -> Self {
-        Self::new_primitive(PrimitiveType::Rectangle, color, [width, height, 0.0, 0.0])
+    pub fn new_rectangle(color: Color) -> Self {
+        Self::new_primitive(PrimitiveType::Rectangle, color)
     }
 
-    pub fn new_circle(color: Color, radius: f32) -> Self {
-        Self::new_primitive(PrimitiveType::Circle, color, [radius, 0.0, 0.0, 0.0])
+    pub fn new_circle(color: Color) -> Self {
+        Self::new_primitive(PrimitiveType::Circle, color)
     }
 
-    pub fn new_line(color: Color, start: [f32; 2], end: [f32; 2]) -> Self {
-        Self::new_primitive(PrimitiveType::Line, color, [start[0], start[1], end[0], end[1]])
+    pub fn new_line(color: Color) -> Self {
+        Self::new_primitive(PrimitiveType::Line, color)
     }
 
     pub fn new_texture(texture: Arc<Texture>) -> Self {

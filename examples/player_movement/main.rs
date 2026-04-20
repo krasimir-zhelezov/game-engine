@@ -52,7 +52,7 @@ fn main() {
 
     app.world.components.add_component::<Renderable>(
         player_id,
-        Renderable::new_rectangle(Color::from_rgba8(255.0, 255.0, 0.0, 255.0), 10.0, 10.0),
+        Renderable::new_rectangle(Color::from_rgba8(255.0, 255.0, 0.0, 255.0)),
     );
 
     app.run();
