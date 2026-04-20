@@ -1,8 +1,11 @@
 use crate::{
     components::{
         collider::{Collider, ColliderShape},
-        transform::{Transform},
-    }, resources::collision_events::{CollisionEvent, CollisionEvents}, systems::system::System, world::WorldView
+        transform::Transform,
+    },
+    resources::collision_events::{CollisionEvent, CollisionEvents},
+    systems::system::System,
+    world::WorldView,
 };
 
 /// A system responsible for detecting physical overlaps between entities.
@@ -24,14 +27,14 @@ impl System for CollisionSystem {
     /// Executes the collision detection logic for the current tick/frame.
     ///
     /// # Algorithm
-    /// This uses an Axis-Aligned Bounding Box (AABB) intersection test. It calculates 
-    /// the left, right, top, and bottom edges of each entity based on its `Transform` 
-    /// (position and scale) and `ColliderShape::Box` dimensions. 
+    /// This uses an Axis-Aligned Bounding Box (AABB) intersection test. It calculates
+    /// the left, right, top, and bottom edges of each entity based on its `Transform`
+    /// (position and scale) and `ColliderShape::Box` dimensions.
     ///
-    /// It performs a pairwise comparison between all eligible entities. 
+    /// It performs a pairwise comparison between all eligible entities.
     ///
     /// # Panics
-    /// This function will currently panic with a `todo!` if it encounters any collider 
+    /// This function will currently panic with a `todo!` if it encounters any collider
     /// shape other than a `ColliderShape::Box`, as non-box intersections are not yet implemented.
     fn update(&mut self, world: &mut WorldView) {
         // Fetch the collision events resource to populate
@@ -51,53 +54,101 @@ impl System for CollisionSystem {
             }
         }
 
+        let check_aabb_circle =
+            |box_t: &Transform, w: f32, h: f32, circ_t: &Transform, r: f32| -> bool {
+                let scaled_w = w * box_t.scale.x;
+                let scaled_h = h * box_t.scale.y;
+                let scaled_r = r * circ_t.scale.x;
+
+                let min_x = box_t.position.x - scaled_w / 2.0;
+                let max_x = box_t.position.x + scaled_w / 2.0;
+                let min_y = box_t.position.y - scaled_h / 2.0;
+                let max_y = box_t.position.y + scaled_h / 2.0;
+
+                let closest_x = circ_t.position.x.clamp(min_x, max_x);
+                let closest_y = circ_t.position.y.clamp(min_y, max_y);
+
+                let dx = circ_t.position.x - closest_x;
+                let dy = circ_t.position.y - closest_y;
+                let distance_sq = (dx * dx) + (dy * dy);
+
+                distance_sq < (scaled_r * scaled_r)
+            };
+
         // Pairwise comparison of all active entities
         for i in 0..active_entities.len() {
             for j in (i + 1)..active_entities.len() {
                 let (id_a, transform_a, collider_a) = &active_entities[i];
                 let (id_b, transform_b, collider_b) = &active_entities[j];
 
-                if let (
-                    ColliderShape::Box {
-                        width: width_a,
-                        height: height_a,
-                    },
-                    ColliderShape::Box {
-                        width: width_b,
-                        height: height_b,
-                    },
-                ) = (&collider_a.shape, &collider_b.shape)
-                {
-                    // Calculate dimensions incorporating the entity's current scale
-                    let scaled_width_a = width_a * transform_a.scale.x;
-                    let scaled_height_a = height_a * transform_a.scale.y;
-                    
-                    let scaled_width_b = width_b * transform_b.scale.x;
-                    let scaled_height_b = height_b * transform_b.scale.y;
+                let is_colliding = match (&collider_a.shape, &collider_b.shape) {
+                    (
+                        ColliderShape::Box {
+                            width: width_a,
+                            height: height_a,
+                        },
+                        ColliderShape::Box {
+                            width: width_b,
+                            height: height_b,
+                        },
+                    ) => {
+                        let scaled_width_a = width_a * transform_a.scale.x;
+                        let scaled_height_a = height_a * transform_a.scale.y;
 
-                    // Calculate AABB edges for entity A
-                    let left_a = transform_a.position.x - scaled_width_a / 2.0;
-                    let right_a = transform_a.position.x + scaled_width_a / 2.0;
-                    let top_a = transform_a.position.y + scaled_height_a / 2.0;
-                    let bottom_a = transform_a.position.y - scaled_height_a / 2.0;
+                        let scaled_width_b = width_b * transform_b.scale.x;
+                        let scaled_height_b = height_b * transform_b.scale.y;
 
-                    // Calculate AABB edges for entity B
-                    let left_b = transform_b.position.x - scaled_width_b / 2.0;
-                    let right_b = transform_b.position.x + scaled_width_b / 2.0;
-                    let top_b = transform_b.position.y + scaled_height_b / 2.0;
-                    let bottom_b = transform_b.position.y - scaled_height_b / 2.0;
+                        // Calculate AABB edges for entity A
+                        let left_a = transform_a.position.x - scaled_width_a / 2.0;
+                        let right_a = transform_a.position.x + scaled_width_a / 2.0;
+                        let top_a = transform_a.position.y + scaled_height_a / 2.0;
+                        let bottom_a = transform_a.position.y - scaled_height_a / 2.0;
 
-                    // AABB intersection check
-                    if left_a < right_b && right_a > left_b && top_a > bottom_b && bottom_a < top_b
-                    {
-                        // Overlap detected; record the collision event
-                        collision_events.events.push(CollisionEvent {
-                            entity_id_a: *id_a as u32,
-                            entity_id_b: *id_b as u32,
-                        });
+                        // Calculate AABB edges for entity B
+                        let left_b = transform_b.position.x - scaled_width_b / 2.0;
+                        let right_b = transform_b.position.x + scaled_width_b / 2.0;
+                        let top_b = transform_b.position.y + scaled_height_b / 2.0;
+                        let bottom_b = transform_b.position.y - scaled_height_b / 2.0;
+
+                        left_a < right_b && right_a > left_b && top_a > bottom_b && bottom_a < top_b
                     }
-                } else {
-                    todo!("Collision detection for non-box colliders not implemented yet");
+
+                    (
+                        ColliderShape::Circle { radius: radius_a },
+                        ColliderShape::Circle { radius: radius_b },
+                    ) => {
+                        let scaled_r_a = radius_a * transform_a.scale.x;
+                        let scaled_r_b = radius_b * transform_b.scale.x;
+
+                        let dx = transform_a.position.x - transform_b.position.x;
+                        let dy = transform_a.position.y - transform_b.position.y;
+                        let distance_sq = (dx * dx) + (dy * dy);
+                        
+                        let radii_sum = scaled_r_a + scaled_r_b;
+
+                        distance_sq < (radii_sum * radii_sum)
+                    }
+
+                    (
+                        ColliderShape::Box { width, height },
+                        ColliderShape::Circle { radius },
+                    ) => {
+                        check_aabb_circle(transform_a, *width, *height, transform_b, *radius)
+                    }
+
+                    (
+                       ColliderShape::Circle { radius }, 
+                       ColliderShape::Box { width, height },
+                    ) => {
+                        check_aabb_circle(transform_a, *width, *height, transform_b, *radius)
+                    }
+                };
+
+                if is_colliding {
+                    collision_events.events.push(CollisionEvent {
+                        entity_id_a: *id_a as u32,
+                        entity_id_b: *id_b as u32,
+                    });
                 }
             }
         }
