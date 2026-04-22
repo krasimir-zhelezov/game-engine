@@ -7,9 +7,10 @@
 * Logging
 * Oriented Bounding Box (OBB) Collision
 * Change Title
-* Prebuilt camera
-* Rename App to Engine/Skalora
+* Change resolution
 
+* ~~Rename App to Engine/Skalora~~
+* ~~Prebuilt camera~~
 * ~~Renderable Rotation~~
 * ~~Remove components~~
 * ~~Collision System~~
