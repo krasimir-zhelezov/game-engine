@@ -111,16 +111,12 @@ impl InputSystem {
                     if input_state.held_keys.insert(key_code) {
                         input_state.just_pressed_keys.insert(key_code);
                     }
-
-                    println!("Key pressed: {:#?}", key_code);
                 }
             }
             ElementState::Released => {
                 if let PhysicalKey::Code(key_code) = event.physical_key {
                     input_state.held_keys.remove(&key_code);
                     input_state.just_released_keys.insert(key_code);
-
-                    println!("Key released: {:#?}", key_code);
                 }
             }
         }
@@ -166,10 +162,6 @@ impl InputSystem {
         let input_state = world.resources.get_mut::<InputState>().unwrap();
         input_state.mouse_delta.0 += delta.0;
         input_state.mouse_delta.1 += delta.1;
-        println!(
-            "Raw mouse motion delta: X: {:.1}, Y: {:.1}",
-            delta.0, delta.1
-        );
     }
 
     /// Accumulates mouse scroll wheel delta into the `InputState`.
