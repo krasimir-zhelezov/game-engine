@@ -6,9 +6,9 @@
 * Debug Tools (Draw colliders)
 * Logging
 * Oriented Bounding Box (OBB) Collision
-* Change Title
 * Change resolution
 
+* ~~Change Title~~
 * ~~Rename App to Engine/Skalora~~
 * ~~Prebuilt camera~~
 * ~~Renderable Rotation~~
