@@ -1,5 +1,6 @@
 use std::{
-    sync::Arc, time::{Duration, Instant}
+    sync::Arc,
+    time::{Duration, Instant},
 };
 
 use winit::{
@@ -9,12 +10,25 @@ use winit::{
 
 use crate::{
     components::{
-        camera::Camera, collider::Collider, component_store::ComponentStore, renderable::Renderable, tag::Tag, transform::{Position, Scale, Transform}, velocity::Velocity
+        camera::Camera,
+        collider::Collider,
+        component_store::ComponentStore,
+        renderable::Renderable,
+        tag::Tag,
+        transform::{Position, Scale, Transform},
+        velocity::Velocity,
     },
     entities::entity_manager::EntityManager,
-    resources::{asset_manager::AssetManager, collision_events::CollisionEvents, resource_store::ResourceStore},
+    resources::{
+        asset_manager::AssetManager, collision_events::CollisionEvents,
+        resource_store::ResourceStore,
+    },
     systems::{
-        camera_system::{CameraState, CameraSystem}, collision_system::CollisionSystem, input_system::{InputState, InputSystem}, system_manager::SystemManager, velocity_system::VelocitySystem
+        camera_system::{CameraState, CameraSystem},
+        collision_system::CollisionSystem,
+        input_system::{InputState, InputSystem},
+        system_manager::SystemManager,
+        velocity_system::VelocitySystem,
     },
 };
 
@@ -61,9 +75,9 @@ impl World {
             fps_timer: Instant::now(),
 
             window_title: "Skalora 2D Game Engine".to_string(),
-            show_debug_title: true,
+            show_debug_title: false,
         };
-        
+
         let asset_manager = AssetManager::new();
 
         world.resources.insert(asset_manager);
@@ -82,13 +96,19 @@ impl World {
         world.systems.add_system(Box::new(InputSystem::new()));
         world.systems.add_system(Box::new(VelocitySystem::new()));
         world.systems.add_system(Box::new(CollisionSystem::new()));
-        
+
         world
     }
 
     pub fn init_graphics(&mut self, window: Arc<Window>) {
+        if !self.show_debug_title {
+            window.set_title(&self.window_title);
+        }
+
         self.window = Some(window.clone());
-        self.systems.add_system(Box::new(pollster::block_on(crate::systems::render_system::RenderSystem::new(window))));
+        self.systems.add_system(Box::new(pollster::block_on(
+            crate::systems::render_system::RenderSystem::new(window),
+        )));
     }
 
     pub fn update(&mut self) {
@@ -107,16 +127,14 @@ impl World {
         }
 
         if self.show_debug_title {
-            // Using map_or is a slightly safer alternative to unwrap() here 
-            // just in case the CollisionEvents resource gets accidentally removed
-            let collision_count = self.resources.get::<CollisionEvents>().map_or(0, |c| c.events.len());
-            
+            let collision_count = self
+                .resources
+                .get::<CollisionEvents>()
+                .map_or(0, |c| c.events.len());
+
             let title = format!(
-                "{} | FPS: {} | Entities: {} | Collisions: {}", 
-                self.window_title, 
-                self.fps, 
-                self.entity_manager.entity_count, 
-                collision_count
+                "{} | FPS: {} | Entities: {} | Collisions: {}",
+                self.window_title, self.fps, self.entity_manager.entity_count, collision_count
             );
 
             if let Some(window) = &self.window {
@@ -129,8 +147,7 @@ impl World {
         }
     }
 
-    pub fn render(&self) {
-    }
+    pub fn render(&self) {}
 
     pub fn handle_keyboard_input(&mut self, event: &KeyEvent) {
         let Self {
@@ -204,7 +221,7 @@ impl World {
 
     pub fn spawn_camera(&mut self) -> u32 {
         let camera_id = self.entity_manager.create_entity();
-        
+
         self.components.add_component(
             camera_id,
             Transform {
@@ -213,7 +230,7 @@ impl World {
                 rotation: 0.0,
             },
         );
-        
+
         self.components.add_component(
             camera_id,
             Camera {
@@ -230,7 +247,7 @@ impl World {
 
     pub fn set_window_title(&mut self, title: &str) {
         self.window_title = title.to_string();
-        
+
         if !self.show_debug_title {
             if let Some(window) = &self.window {
                 window.set_title(&self.window_title);
@@ -240,7 +257,7 @@ impl World {
 
     pub fn set_debug_title(&mut self, enabled: bool) {
         self.show_debug_title = enabled;
-        
+
         if !enabled {
             if let Some(window) = &self.window {
                 window.set_title(&self.window_title);

@@ -15,6 +15,7 @@ fn main() {
     let mut app = Skalora::new();
 
     app.world.set_window_title("Bouncing Balls");
+    
 
     app.world.systems.add_system(Box::new(BounceSystem::new()));
 
