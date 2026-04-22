@@ -1,7 +1,7 @@
 mod bounce_system;
 
 use skalora_game_engine::{
-    app::App,
+    engine::Skalora,
     components::{
         camera::Camera, collider::{Collider, ColliderShape}, renderable::{Color, Renderable}, transform::{Position, Scale, Transform}, velocity::Velocity
     },
@@ -12,7 +12,7 @@ use crate::bounce_system::BounceSystem;
 const BALL_SPEED: f32 = 0.2;
 
 fn main() {
-    let mut app = App::new();
+    let mut app = Skalora::new();
 
     app.world.systems.add_system(Box::new(BounceSystem::new()));
 

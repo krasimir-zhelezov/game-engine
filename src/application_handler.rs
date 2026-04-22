@@ -9,12 +9,12 @@ use winit::{
     window::{self, Window},
 };
 
-use crate::{app::App};
+use crate::{engine::Skalora};
 
 const FPS: u32 = 60;
 const FRAME_DURATION: std::time::Duration = Duration::from_nanos(1_000_000_000 / FPS as u64);
 
-impl ApplicationHandler for App {
+impl ApplicationHandler for Skalora {
     fn resumed(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {
         if self.world.window.is_none() {
             let mut attributes = Window::default_attributes();

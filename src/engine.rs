@@ -2,11 +2,11 @@ use winit::{event_loop::EventLoop};
 
 use crate::{world::World};
 
-pub struct App {
+pub struct Skalora {
     pub world: World,
 }
 
-impl App {
+impl Skalora {
     pub fn new() -> Self {
         Self {
             world: World::new(),

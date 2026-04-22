@@ -1,12 +1,12 @@
 mod player_controller;
 mod player_movement_system;
 
-use skalora_game_engine::{app::App, components::{camera::Camera, renderable::{Color, Renderable}, transform::{Position, Scale, Transform}}};
+use skalora_game_engine::{engine::Skalora, components::{camera::Camera, renderable::{Color, Renderable}, transform::{Position, Scale, Transform}}};
 
 use crate::{player_controller::PlayerController, player_movement_system::PlayerMovementSystem};
 
 fn main() {
-    let mut app = App::new();
+    let mut app = Skalora::new();
 
     app.world.components.register_component::<PlayerController>();
 

@@ -1,5 +1,5 @@
 use skalora_game_engine::{
-    app::App,
+    engine::Skalora,
     components::{
         camera::Camera,
         transform::{Position, Scale, Transform},
@@ -11,7 +11,7 @@ use crate::systems::stress_test_system::StressTestSystem;
 mod systems;
 
 fn main() {
-    let mut app = App::new();
+    let mut app = Skalora::new();
 
     app.world
         .systems
