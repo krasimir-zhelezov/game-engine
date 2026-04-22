@@ -40,6 +40,11 @@ impl AssetManager {
     fn load_textures(&mut self) {
         let dir_path = "assets/";
 
+        if let Err(e) = std::fs::create_dir_all(dir_path) {
+            eprintln!("Warning: Could not create missing assets directory: {}", e);
+            return;
+        }
+
         for entry in std::fs::read_dir(dir_path).expect("Failed to read assets directory") {
             let entry = entry.expect("Failed to read directory entry");
             let path = entry.path();
