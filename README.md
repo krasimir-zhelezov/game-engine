@@ -17,6 +17,25 @@ cargo new game-name
 skalora-game-engine = { git = "https://github.com/krasimir-zhelezov/game-engine" }
 ```
 
+3. Create a simple game
+```rust
+fn main() {
+    let mut engine = Skalora::new(); // initialize engine
+
+    let camera_id = engine.world.spawn_camera(); // spawn predefined camera
+
+    let player_id = engine.world.entity_manager.create_entity(); // create simple entity
+
+    engine.run(); // run main loop
+}
+```
+
+4. Export to Linux
+```bash
+cargo build --release
+```
+* NOTE: this will export executable in ```target/release/game-name```
+
 ## How to run examples
 
 ### Requirements
