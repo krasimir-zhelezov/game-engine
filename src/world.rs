@@ -9,10 +9,10 @@ use winit::{
 
 use crate::{
     components::{
-        camera::Camera, collider::{Collider}, component_store::ComponentStore, renderable::{Renderable}, tag::Tag, transform::{Transform}, velocity::Velocity
+        camera::Camera, collider::Collider, component_store::ComponentStore, renderable::Renderable, tag::Tag, transform::{Position, Scale, Transform}, velocity::Velocity
     },
     entities::entity_manager::EntityManager,
-    resources::{asset_manager::{AssetManager}, collision_events::{CollisionEvents}, resource_store::ResourceStore},
+    resources::{asset_manager::AssetManager, collision_events::CollisionEvents, resource_store::ResourceStore},
     systems::{
         camera_system::{CameraState, CameraSystem}, collision_system::CollisionSystem, input_system::{InputState, InputSystem}, system_manager::SystemManager, velocity_system::VelocitySystem
     },
@@ -183,5 +183,31 @@ impl World {
         };
 
         input_system.handle_mouse_motion(&mut view, delta);
+    }
+
+    pub fn spawn_camera(&mut self) -> u32 {
+        let camera_id = self.entity_manager.create_entity();
+        
+        self.components.add_component(
+            camera_id,
+            Transform {
+                position: Position { x: 0.0, y: 0.0 },
+                scale: Scale { x: 1.0, y: 1.0 },
+                rotation: 0.0,
+            },
+        );
+        
+        self.components.add_component(
+            camera_id,
+            Camera {
+                zoom: 10.0,
+                aspect_ratio: 4.0 / 3.0,
+                near_plane: -100.0,
+                far_plane: 100.0,
+                fov: 1.0,
+            },
+        );
+
+        camera_id
     }
 }
