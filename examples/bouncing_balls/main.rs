@@ -14,6 +14,8 @@ const BALL_SPEED: f32 = 0.2;
 fn main() {
     let mut app = Skalora::new();
 
+    app.world.set_window_title("Bouncing Balls");
+
     app.world.systems.add_system(Box::new(BounceSystem::new()));
 
     let camera_id = app.world.entity_manager.create_entity();

@@ -32,6 +32,9 @@ pub struct World {
     pub fps: u32,
     frame_count: u32,
     fps_timer: Instant,
+
+    pub window_title: String,
+    pub show_debug_title: bool,
 }
 
 pub struct WorldView<'a> {
@@ -56,6 +59,9 @@ impl World {
             fps: 0,
             frame_count: 0,
             fps_timer: Instant::now(),
+
+            window_title: "Skalora 2D Game Engine".to_string(),
+            show_debug_title: true,
         };
         
         let asset_manager = AssetManager::new();
@@ -100,11 +106,22 @@ impl World {
             self.fps_timer = Instant::now();
         }
 
-        let title = format!("Skalora 2D Game Engine | FPS: {} | Entities: {} | Collisions: {}", self.fps, self.entity_manager.entity_count, self.resources.get::<CollisionEvents>().unwrap().events.len());
+        if self.show_debug_title {
+            // Using map_or is a slightly safer alternative to unwrap() here 
+            // just in case the CollisionEvents resource gets accidentally removed
+            let collision_count = self.resources.get::<CollisionEvents>().map_or(0, |c| c.events.len());
+            
+            let title = format!(
+                "{} | FPS: {} | Entities: {} | Collisions: {}", 
+                self.window_title, 
+                self.fps, 
+                self.entity_manager.entity_count, 
+                collision_count
+            );
 
-
-        if let Some(window) = &self.window {
-            window.set_title(&title);
+            if let Some(window) = &self.window {
+                window.set_title(&title);
+            }
         }
 
         if let Some(collision_events) = self.resources.get_mut::<CollisionEvents>() {
@@ -209,5 +226,25 @@ impl World {
         );
 
         camera_id
+    }
+
+    pub fn set_window_title(&mut self, title: &str) {
+        self.window_title = title.to_string();
+        
+        if !self.show_debug_title {
+            if let Some(window) = &self.window {
+                window.set_title(&self.window_title);
+            }
+        }
+    }
+
+    pub fn set_debug_title(&mut self, enabled: bool) {
+        self.show_debug_title = enabled;
+        
+        if !enabled {
+            if let Some(window) = &self.window {
+                window.set_title(&self.window_title);
+            }
+        }
     }
 }
