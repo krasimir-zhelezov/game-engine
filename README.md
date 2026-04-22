@@ -3,7 +3,21 @@ Welcome to the Skalora 2D Game Engine! Skalora is built on a robust Entity-Compo
 
 [View Todo List](TODO.md)
 
-## How to run it
+
+## Getting started
+1. Create new cargo project
+
+```bash
+cargo new game-name
+```
+
+2. Add this line under dependencies tag in ```Cargo.toml```
+```toml
+[dependencies]
+skalora-game-engine = { git = "https://github.com/krasimir-zhelezov/game-engine" }
+```
+
+## How to run examples
 
 ### Requirements
 * rustc = 1.90.0
