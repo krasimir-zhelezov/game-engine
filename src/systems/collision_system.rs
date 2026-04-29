@@ -140,7 +140,7 @@ impl System for CollisionSystem {
                        ColliderShape::Circle { radius }, 
                        ColliderShape::Box { width, height },
                     ) => {
-                        check_aabb_circle(transform_a, *width, *height, transform_b, *radius)
+                        check_aabb_circle(transform_b, *width, *height, transform_a, *radius)
                     }
                 };
 

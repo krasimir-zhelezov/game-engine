@@ -13,6 +13,8 @@ mod systems;
 fn main() {
     let mut app = Skalora::new();
 
+    app.world.set_debug_title(true);
+
     app.world
         .systems
         .add_system(Box::new(StressTestSystem::new(10)));
